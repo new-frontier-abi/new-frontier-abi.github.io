@@ -1,4 +1,4 @@
-/* DW Automation Platform — tema: preto, branco, dourado e amarelo. Um mapa por tela; o conteúdo vem de assets/data.js. */
+/* DW Automation Platform. Tema: preto, branco, dourado e amarelo. Um mapa por tela; o conteúdo vem de assets/data.js. */
 :root{
   --bg:#FFFFFF; --surface:#F6F5F0; --card:#FFFFFF; --faint:#ECEAE2;
   --ink:#0A0A0A; --muted:#5E5B51; --line:#DAD7CC; --ghost:#B9B5A9; --edge:#8D897C;
