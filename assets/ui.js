@@ -9,6 +9,7 @@
   U.esc = function (s) { return String(s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); };
   U.byId = function (list, id) { return list.filter(function (x) { return x.id === id; })[0]; };
   U.pad = function (n) { return (n < 10 ? "0" : "") + n; };
+  var HOP = 560;   /* tempo do ponto em cada trecho das raias */
   function wait(ms) { return new Promise(function (r) { setTimeout(r, ms); }); }
   function each(list, fn) { Array.prototype.forEach.call(list, fn); }
   var esc = U.esc;
@@ -37,7 +38,8 @@
   };
   U.cols = function (items, cls) { return "<div class='cols" + (cls ? " " + cls : "") + "'>" + items.map(function (c) { return "<div class='col'><h3>" + esc(c[0]) + "</h3><p>" + esc(c[1]) + "</p></div>"; }).join("") + "</div>"; };
 
-  /* palco: o que se vê, os controles, o desenho e a legenda. kind "play" traz os controles do Play; canvas "board" troca o mapa por um quadro de cartões. */
+  /* palco: o que se vê, os controles, o desenho e a legenda. kind "play" traz os controles do Play.
+     canvas: "board" troca o mapa por um quadro de cartões; "model", por um quadro que a própria tela monta (js-model). */
   U.stage = function (kind, legend, canvas) {
     var fs = "<button class='ib js-fs' type='button' title='Tela cheia (F)' aria-label='Tela cheia' hidden>" + ICON.full + "</button>";
     var ctl = kind !== "play" ? fs :
@@ -47,7 +49,7 @@
       "<button class='ib js-reset' type='button' title='Voltar ao começo' aria-label='Voltar ao começo'>" + ICON.again + "</button>" + fs;
     return "<section class='stage" + (kind === "play" ? " play" : "") + (canvas === "board" ? " deck" : "") + "'><div class='stage-head'><div class='stage-top'><div class='st-text' aria-live='polite'><p class='k js-k' hidden></p><h2 class='js-title'></h2><p class='js-sub'></p></div><div class='ctl'>" + ctl + "</div></div>" +
       (kind === "play" ? "<div class='prog js-prog'></div>" : "") + "</div>" +
-      (canvas === "board" ? "<div class='board js-board'></div>" : "<div class='scroll'><svg class='js-map' role='img'></svg></div>") +
+      (canvas === "board" ? "<div class='board js-board'></div>" : canvas === "model" ? "<div class='opm js-model'></div>" : "<div class='scroll'><svg class='js-map' role='img'></svg></div>") +
       (legend ? "<div class='legend'>" + legend + "</div>" : "") + "</section>";
   };
   U.steps = function (title) { return "<div class='panel'><h2>" + esc(title || "Passos") + "</h2><ol class='steps js-steps'></ol></div>"; };
@@ -120,11 +122,11 @@
     if (Math.abs(dy) > 4) window.scrollBy({ top: dy, behavior: calm() });
   }
 
-  /* ---------- menu de troca: grupos de botões em uma linha. item: [id, rótulo, contagem] ---------- */
+  /* ---------- menu de troca: grupos de botões em uma linha; um grupo com nome não se separa do nome ao quebrar. item: [id, rótulo, contagem] ---------- */
   U.seg = function (groups, label) {
     return "<div class='seg js-seg' role='group' aria-label='" + esc(label || "Exemplos") + "'>" + groups.map(function (g) {
-      return (g.name ? "<span class='seg-g'>" + esc(g.name) + "</span>" : "") + g.items.map(function (it) {
-        return "<button class='seg-b' type='button' data-s='" + esc(it[0]) + "' aria-pressed='false'>" + esc(it[1]) + (it[2] != null ? "<i>" + esc(it[2]) + "</i>" : "") + "</button>"; }).join("");
+      return "<span class='seg-grp'>" + (g.name ? "<span class='seg-g'>" + esc(g.name) + "</span>" : "") + g.items.map(function (it) {
+        return "<button class='seg-b' type='button' data-s='" + esc(it[0]) + "' aria-pressed='false'>" + esc(it[1]) + (it[2] != null ? "<i>" + esc(it[2]) + "</i>" : "") + "</button>"; }).join("") + "</span>";
     }).join("") + "</div>";
   };
   function segSet(el, id) { each(el.querySelectorAll(".seg-b"), function (b) { b.setAttribute("aria-pressed", b.getAttribute("data-s") === id ? "true" : "false"); }); }
@@ -257,15 +259,16 @@
     });
   }
 
-  /* ---------- exemplos: passos que andam sobre um mapa ou sobre um quadro de cartões ---------- */
-  /* o: { scenarios, data (mapa padrão), start, tag(sc), card(c) para o quadro, onPick(id) }
-     passo no mapa: path (anda pelas ligações) ou on (acende um conjunto de nós); passo no quadro: on (cartões; o primeiro é o que fica à vista).
-     sc.focus: só o conjunto do passo atual fica aceso. */
+  /* ---------- exemplos: passos que andam sobre um mapa, sobre um desenho em raias ou sobre um quadro de cartões ---------- */
+  /* o: { scenarios, data (mapa padrão), lib (participantes das raias), start, tag(sc), card(c) para o quadro, onPick(id) }
+     passo no mapa: path (anda pelas ligações) ou on (acende um conjunto de nós); nas raias (sc.seq): hops, os trechos da etapa;
+     no quadro: on (cartões; o primeiro é o que fica à vista). sc.focus: só o conjunto do passo atual fica aceso.
+     sc.more [aba, exemplo, rótulo] e sc.down (rótulo) põem um atalho no texto do exemplo parado. */
   U.Player = function (root, o) {
     var work = root.querySelector(".work"), segEl = root.querySelector(".js-seg"), stepsEl = work.querySelector(".js-steps");
     var svg = work.querySelector(".js-map"), board = work.querySelector(".js-board"), box = work.querySelector(".st-text");
     var kEl = work.querySelector(".js-k"), tEl = work.querySelector(".js-title"), sEl = work.querySelector(".js-sub");
-    var map = null, sc = null, i = -1, run = 0, transport = null;
+    var map = null, flow = null, sc = null, i = -1, run = 0, transport = null;
     function pairs(path) { var out = []; for (var k = 0; k < path.length - 1; k++) out.push(map.between(path[k], path[k + 1])); return out; }
 
     /* estado parado do passo i: o que já passou fica marcado, o passo atual fica em destaque */
@@ -298,14 +301,22 @@
     function caption(k) {
       var s = k >= 0 ? sc.steps[k] : null;
       if (s) return [s.t, esc(s.d || "")];
-      return [sc.title, (sc.today ? "<b>Hoje</b>" + esc(sc.today) : esc(sc.lead || "")) + (sc.note ? "<br><b>Proposta</b>" + esc(sc.note) : "")];
+      return [sc.title, (sc.today ? "<b>Hoje</b>" + esc(sc.today) : esc(sc.lead || "")) + (sc.note ? "<br><b>Proposta</b>" + esc(sc.note) : "") +
+        (sc.more ? " <button class='link' type='button' data-go='" + esc(sc.more[0]) + "' data-arg='" + esc(sc.more[1]) + "'>" + esc(sc.more[2]) + "</button>" : "") +
+        (sc.down ? " <button class='link js-down' type='button'>" + esc(sc.down) + "</button>" : "")];
+    }
+    /* nas raias, olhar um participante troca o texto do palco pelo papel dele; ao sair, volta o texto do passo */
+    function role(text, n, of) { return esc(text) + " <b class='cnt'>Entra em " + n + " de " + of + " etapas</b>"; }
+    function peeked(p) {
+      var c = p ? [p.name, role(p.role, p.rows, p.of)] : caption(i);
+      tEl.textContent = c[0]; sEl.innerHTML = c[1];
     }
     function paint(arriving) {
-      if (board) paintBoard(); else paintMap(arriving);
-      var c = caption(i); tEl.textContent = c[0]; sEl.innerHTML = c[1];
-      each(stepsEl.children, function (li, k) { li.className = k === i ? "cur" : k < i ? "past" : ""; if (k === i) li.setAttribute("aria-current", "step"); else li.removeAttribute("aria-current"); });
+      if (board) paintBoard(); else if (flow) flow.paint(i, arriving); else paintMap(arriving);
+      if (!(flow && flow.peeking())) { var c = caption(i); tEl.textContent = c[0]; sEl.innerHTML = c[1]; }   /* o texto do participante fica enquanto a pessoa olha */
+      if (stepsEl) each(stepsEl.children, function (li, k) { li.className = k === i ? "cur" : k < i ? "past" : ""; if (k === i) li.setAttribute("aria-current", "step"); else li.removeAttribute("aria-current"); });
     }
-    /* o que está em destaque fica à vista: o cartão do passo, na página; o nó do passo, no mapa que rola de lado */
+    /* o que está em destaque fica à vista: o cartão do passo, na página; o nó ou a etapa do passo, no desenho que rola de lado */
     function reveal() {
       var smooth = calm();
       if (board) {
@@ -320,20 +331,26 @@
         if (dy) (full ? board : window).scrollBy({ top: dy, behavior: smooth });
         return;
       }
-      var g = svg.querySelector(".nd.act"), box = svg.parentNode; if (!g) return;
+      var g = flow ? i >= 0 && flow.rows[i].g.querySelector(".sq-hop") : svg.querySelector(".nd.act"), box = svg.parentNode; if (!g) return;
       var a = g.getBoundingClientRect(), b = box.getBoundingClientRect();
       if (a.left < b.left + 8 || a.right > b.right - 8) box.scrollTo({ left: box.scrollLeft + a.left + a.width / 2 - b.left - b.width / 2, behavior: smooth });
     }
     /* anda até o passo k; com animação, o ponto percorre cada ligação do passo */
     function go(k, animate) {
-      var my = ++run; if (map) map.stop(); i = k;
+      var my = ++run; if (map) map.stop(); if (flow) flow.stop(); i = k;
       if (i < 0 || !animate) { paint(false); reveal(); return Promise.resolve(true); }
-      var st = sc.steps[i];
+      var st = sc.steps[i], chain = Promise.resolve(true);
+      if (flow) {                                      /* nas raias, o ponto percorre cada trecho da etapa */
+        paint(true); reveal();
+        st.hops.forEach(function (h, j) {
+          chain = chain.then(function (ok) { return ok && my === run ? flow.travel(i, j, HOP).then(function (done) { return done && my === run; }) : false; });
+        });
+        return chain.then(function (ok) { if (ok && my === run) paint(false); return ok && my === run; });
+      }
       if (board || !st.path) { paint(false); reveal(); return wait(380).then(function () { return my === run; }); }
       var ps = pairs(st.path);
       paint(true); reveal();
       if (!ps.length) { paint(false); map.pulse(st.path[0]); return wait(500).then(function () { return my === run; }); }
-      var chain = Promise.resolve(true);
       ps.forEach(function (p, j) {
         chain = chain.then(function (ok) {
           if (!ok || my !== run) return false;
@@ -352,10 +369,10 @@
     var core = {
       first: -1,
       count: function () { return sc.steps.length; }, index: function () { return i; }, go: go,
-      settle: function () { run++; if (map) map.stop(); paint(false); },
+      settle: function () { run++; if (map) map.stop(); if (flow) flow.stop(); paint(false); },
       /* tempo de leitura de cada passo: cresce com o tamanho do texto */
       dwell: function (k) { var s = sc.steps[k]; return Math.max(2200, Math.min(5200, 1400 + 32 * ((s.t + (s.d || "")).length))); },
-      span: function (k) { var s = sc.steps[k], hops = s.path ? s.path.length - 1 : 0; return (board || !s.path ? 380 : hops ? hops * 720 : 500) + core.dwell(k); },
+      span: function (k) { var s = sc.steps[k], hops = s.path ? s.path.length - 1 : 0; return (flow ? s.hops.length * HOP : board || !s.path ? 380 : hops ? hops * 720 : 500) + core.dwell(k); },
       show: function () { if (!board) frame(work); }   /* no quadro, quem fica à vista é o cartão do passo */
     };
     function load(id) {
@@ -364,35 +381,39 @@
       if (segEl) segSet(segEl, id);
       var tag = o.tag ? o.tag(sc) : "";
       kEl.hidden = !tag; kEl.textContent = tag;
-      stepsEl.innerHTML = sc.steps.map(function (s, k) { return "<li data-k='" + k + "'><span class='n'>" + U.pad(k + 1) + "</span><b>" + esc(s.t) + "</b></li>"; }).join("");
+      if (stepsEl) stepsEl.innerHTML = sc.steps.map(function (s, k) { return "<li data-k='" + k + "'><span class='n'>" + U.pad(k + 1) + "</span><b>" + esc(s.t) + "</b></li>"; }).join("");
+      map = flow = null;
       if (board) board.innerHTML = sc.cards.map(o.card).join("");
+      else if (sc.seq) { flow = DW.Seq(svg, sc.seq, sc.steps, o.lib, function (k) { transport.jump(k, true); }, peeked); svg.setAttribute("aria-label", sc.title + ": " + sc.steps.length + " etapas"); }
       else { map = DW.Map(svg, sc.map || o.data); svg.setAttribute("aria-label", sc.title); }
       paint(false);
       var all = [];
       for (var k = -1; k < sc.steps.length; k++) { var c = caption(k); all.push("<p class='k'>" + esc(tag || "") + "</p><h2>" + esc(c[0]) + "</h2><p class='js-sub'>" + c[1] + "</p>"); }
+      if (flow) flow.parts.forEach(function (p) { all.push("<p class='k'>" + esc(tag || "") + "</p><h2>" + esc(p.name) + "</h2><p class='js-sub'>" + role(p.d, sc.steps.length, sc.steps.length) + "</p>"); });
       U.lock(box, all);
       fresh(work);
       transport = Transport(work, core);
     }
     if (segEl) segEl.addEventListener("click", function (ev) { var b = ev.target.closest(".seg-b"); if (b) { load(b.getAttribute("data-s")); if (o.onPick) o.onPick(b.getAttribute("data-s")); } });
-    stepsEl.addEventListener("click", function (ev) { var li = ev.target.closest("li"); if (li) transport.jump(+li.getAttribute("data-k"), true); });
+    if (stepsEl) stepsEl.addEventListener("click", function (ev) { var li = ev.target.closest("li"); if (li) transport.jump(+li.getAttribute("data-k"), true); });
     var comp = { root: root, primary: !!o.primary, load: load, current: function () { return sc.id; },
-      stop: function () { if (transport) transport.pause(); run++; if (map) map.stop(); }, key: function (k) { return transport.key(k); } };
+      stop: function () { if (transport) transport.pause(); run++; if (map) map.stop(); if (flow) flow.stop(); },
+      key: function (k) { if (k === "Escape" && flow && flow.peeking()) { flow.peek(null); return true; } return transport.key(k); } };
     register(comp);
     load(o.start && U.byId(o.scenarios, o.start) ? o.start : o.scenarios[0].id);
     return comp;
   };
 
-  /* ---------- fases e jornada: uma linha do tempo em cima; o mapa mostra o que existe em cada ponto ---------- */
-  /* o: { data, steps: [{b, name, when}], apply(k, map) → {title, sub}, subOf(k), start, aria } */
+  /* ---------- fases e jornada: uma linha do tempo em cima; o mapa, ou o quadro da tela, mostra o que existe em cada ponto ---------- */
+  /* o: { data, steps: [{b, name, when}], apply(k, map) → {title, sub}, subOf(k), start, aria }. Sem mapa no palco, apply recebe null. */
   U.timeline = function (steps) {
     return "<ol class='tl js-tl'>" + steps.map(function (s, k) {
       return "<li><button class='tl-b' type='button' data-k='" + k + "' aria-pressed='false'><i></i><b>" + esc(s.b) + "</b><span>" + esc(s.name) + "</span>" + (s.when ? "<small>" + esc(s.when) + "</small>" : "") + "</button></li>"; }).join("") + "</ol>";
   };
   U.Phased = function (root, o) {
     var work = root.querySelector(".work"), tl = root.querySelector(".js-tl"), svg = work.querySelector(".js-map");
-    var tEl = work.querySelector(".js-title"), sEl = work.querySelector(".js-sub"), map = DW.Map(svg, o.data), cur = 0;
-    svg.setAttribute("aria-label", o.aria);
+    var tEl = work.querySelector(".js-title"), sEl = work.querySelector(".js-sub"), map = svg ? DW.Map(svg, o.data) : null, cur = 0;
+    (svg || work.querySelector(".js-model")).setAttribute("aria-label", o.aria);
     work.querySelector(".stage").classList.add("quiet");   /* a linha do tempo já mostra o progresso */
     function set(k) {
       cur = k; var out = o.apply(k, map);
@@ -414,15 +435,17 @@
   };
 
   /* ---------- catálogo de funções: filtro por abordagem e cartões que abrem ---------- */
-  /* função: [área, função, hoje, com a plataforma, abordagem, grupo, nível, continua com pessoas, fase, agente, proposta] */
-  U.functions = function (list, groups, noArea) {
-    var count = {};
-    list.forEach(function (f) { count[f[5]] = (count[f[5]] || 0) + 1; });
+  /* função: [área, função, hoje, com a plataforma, abordagem, grupo, nível, continua com pessoas, fase, agente, proposta, tema]
+     by: o campo do filtro; sem ele, o grupo da abordagem (5). Com outro campo, o nome do grupo aparece no alto de cada cartão, no lugar da área. */
+  U.functions = function (list, groups, noArea, by) {
+    var count = {}; by = by || 5;
+    list.forEach(function (f) { count[f[by]] = (count[f[by]] || 0) + 1; });
     var items = groups.filter(function (g) { return !g[0] || count[g[0]]; }).map(function (g) { return [g[0], g[1], g[0] ? count[g[0]] : list.length]; });
-    function small(f) { var t = (noArea ? [] : [f[0]]).concat(f[9] ? ["agente " + f[9]] : []).join(" · "); return t ? "<small>" + esc(t) + "</small>" : ""; }
-    return U.seg([{ items: items }], "Abordagem") + "<div class='fgrid js-fgrid'>" + list.map(function (f) {
-      return "<button class='fcard" + (f[9] ? " named" : "") + "' type='button' data-g='" + f[5] + "' aria-expanded='false'>" + small(f) + "<b>" + esc(f[1]) + "</b>" +
-        "<span class='chipsm'><i class='g-" + f[5] + "'>" + esc(f[4]) + "</i><i>" + esc(f[6]) + "</i><i>" + (f[10] ? "proposta" : "Fase " + esc(f[8])) + "</i></span>" +
+    var names = {}; groups.forEach(function (g) { names[g[0]] = g[1]; });
+    function small(f) { var t = (by !== 5 ? [names[f[by]]] : noArea ? [] : [f[0]]).concat(f[9] ? ["agente " + f[9]] : []).join(" · "); return t ? "<small>" + esc(t) + "</small>" : ""; }
+    return U.seg([{ items: items }], by === 5 ? "Abordagem" : "Tema") + "<div class='fgrid js-fgrid'>" + list.map(function (f) {
+      return "<button class='fcard" + (f[9] ? " named" : "") + (f[10] ? " prop" : "") + "' type='button' data-g='" + f[by] + "' aria-expanded='false'>" + small(f) + "<b>" + esc(f[1]) + "</b>" +
+        "<span class='chipsm'><i class='g-" + f[5] + "'>" + esc(f[4]) + "</i><i>" + esc(f[6]) + "</i><i>" + (f[10] ? "Proposta" : "Fase " + esc(f[8])) + "</i></span>" +
         "<span class='more'><span><em>Hoje</em>" + esc(f[2]) + "</span><span><em>Com a plataforma</em>" + esc(f[3]) + "</span><span><em>Continua com pessoas</em>" + esc(f[7]) + "</span></span></button>"; }).join("") + "</div>";
   };
   U.Functions = function (root, start) {

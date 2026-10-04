@@ -8,9 +8,9 @@ Publicado em <https://new-frontier-abi.github.io>.
 |---|---|---|
 | [Plataforma](https://new-frontier-abi.github.io/) | Liderança e arquitetura | As quatro peças, o desenho técnico de cada uma no Azure, os exemplos e as fases |
 | [Automações](https://new-frontier-abi.github.io/automacoes/) | O time que constrói e opera | A jornada, o ambiente e a esteira, a base passo a passo, os recursos, os times e os agentes |
-| [ServiceNow](https://new-frontier-abi.github.io/servicenow/) | O time do ServiceNow | Nove casos de uso com o que cada um entrega, o que entra na instância e as garantias |
+| [ServiceNow](https://new-frontier-abi.github.io/servicenow/) | O time do ServiceNow | O modelo de operação e o de desenvolvimento, fase por fase; os exemplos; os agentes; as garantias |
 
-Em cada página, a primeira aba tem o desenho executivo em cima e o técnico logo abaixo.
+O desenho executivo fica em cima e o técnico, logo abaixo. Na página do ServiceNow, o técnico é um desenho em raias: uma linha por etapa do processo, uma coluna por participante, com os serviços do Azure dentro de uma zona.
 
 ## O que tem aqui
 
@@ -19,10 +19,11 @@ Em cada página, a primeira aba tem o desenho executivo em cima e o técnico log
 | `index.html`, `automacoes/index.html`, `servicenow/index.html` | As três páginas: só o cabeçalho e a lista de arquivos |
 | `assets/data.js` | Plataforma: mapa executivo, desenhos técnicos, exemplos e fases |
 | `assets/team-data.js` | Time de automações: jornada, ambiente, base, recursos, times e funções |
-| `assets/now-data.js` | ServiceNow: casos de uso, a instância por dentro e as garantias |
+| `assets/now-data.js` | ServiceNow: os dois modelos, os processos em raias, os exemplos, a instância por dentro e as garantias |
 | `assets/app.js`, `assets/team.js`, `assets/now.js` | As telas de cada página |
 | `assets/ui.js` | O que as três páginas dividem: navegação, palco, controles do Play, menus e catálogo de funções |
 | `assets/map.js` | O mapa, desenhado em SVG a partir dos dados |
+| `assets/seq.js` | O desenho em raias, também em SVG a partir dos dados |
 | `assets/site.css` | Os dois temas: branco, o padrão, e escuro |
 | `assets/theme.js` | O botão do cabeçalho que troca o tema e guarda a escolha |
 
@@ -33,9 +34,11 @@ O conteúdo fica só nos três arquivos de dados. Não há build: abra `index.ht
 - **Mapa**: cada nó tem coluna (`c`) e linha (`r`) em uma grade; `h` é a altura em linhas. Uma ligação anda em linha reta entre nós da mesma linha ou coluna; `bend: "hv"` ou `"vh"` faz um L.
 - **Exemplo sobre um mapa**: cada passo tem `path`, a sequência de nós por onde o ponto anda. Só vale passar por ligações que existem.
 - **Desenho técnico**: igual a um exemplo, com o próprio mapa em `map`. Um passo com `on` acende um conjunto de nós em vez de andar.
-- **Caso de uso do ServiceNow**: um quadro de cartões (`cards`) e os passos que acendem cada cartão (`on`; o primeiro é o que fica à vista).
+- **Exemplo do ServiceNow**: um quadro de cartões (`cards`) e os passos que acendem cada cartão (`on`; o primeiro é o que fica à vista). `seq` diz qual processo em raias aparece embaixo dele.
+- **Processo em raias**: quem participa (`seq.parts`, tirado de `parts`) e as etapas. Cada etapa tem os trechos que percorre (`hops`: de, para e um rótulo curto). A camada de cada participante (`g`) decide se ele fica dentro da zona do Azure.
+- **Modelo por fase**: uma coluna por etapa. Em cada uma, o que o time faz hoje (`today`), o que continua com ele (`keeps`) e as capacidades (`caps`), cada uma com a fase em que entra (`p`; 5 é proposta).
 
-O endereço guarda a aba e o exemplo: `#agentes/s-falha`, `#plataforma/hub`, `servicenow/#casos/c-evento`.
+O endereço guarda a aba e o exemplo: `#agentes/s-falha`, `#plataforma/hub`, `servicenow/#operacao/q-pedido`, `servicenow/#exemplos/e-oferta`.
 
 O site abre no tema branco. O botão no canto do cabeçalho troca para o escuro, e a escolha vale para as três páginas. Para abrir direto em um deles: `?tema=escuro` ou `?tema=claro` no endereço.
 
@@ -43,10 +46,13 @@ Mudou um arquivo de `assets/`? Aumente o número em `?v=` nas três páginas, pa
 
 Teclado, em qualquer palco com Play: `→` e `←` andam um passo, `espaço` toca e pausa, `Home` volta ao começo, `F` abre em tela cheia.
 
+Nas raias, passar o cursor em um participante, ou tocar nele, mostra o papel dele e acende só as etapas em que ele entra. `Esc` solta.
+
 ## Regras do conteúdo
 
 - cada passo de um exemplo anda por ligações que existem no mapa, e todo nó de um desenho técnico aparece em algum passo;
 - um exemplo só usa peças que já existem na fase dele;
-- o que ainda não está no plano de fases aparece marcado como proposta;
+- o que ainda não está no plano de fases aparece marcado como proposta, e proposta que depende de ferramenta nova diz isso;
+- nenhum número de ganho: os indicadores dizem o que medir, e a meta sai da linha de base;
 - o site é público: só tipo de serviço e papel de cada peça. Nada de nome de recurso, de identificador interno, de tamanho nem de custo; isso fica no repositório de infraestrutura;
 - tickets, ofertas e grupos dos exemplos são fictícios.

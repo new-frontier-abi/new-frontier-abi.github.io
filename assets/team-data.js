@@ -14,7 +14,7 @@ window.TEAM = {
       { id: "now",     t: "ServiceNow",         s: "catálogo, tickets, flows", c: 3, r: 0,  h: 3, k: "ext", p: 1,
         ports: [{ r: 0, t: "eventos", side: "l" }, { r: 1, t: "ação de Flow", side: "l" }, { r: 2, t: "ferramentas", side: "l" }] },
       { id: "other",   t: "Outros produtos",    s: "API, eventos ou MCP",      c: 1, r: 3,  k: "ext", p: 5 },
-      { id: "stellar", t: "Stellar",            s: "chat dos funcionários",    c: 2, r: 3,  k: "ext", p: 4 }
+      { id: "stellar", t: "Stellar",            s: "chat interno, para todos", c: 2, r: 3,  k: "ext", p: 4 }
     ],
     zone: { c0: 1, c1: 2, r0: -1, r1: 2, label: "O QUE O TIME CONSTRÓI E OPERA" },
     edges: [
@@ -231,7 +231,7 @@ window.TEAM = {
       { id: "idp",     t: "Identidade",          s: "aplicativos e tokens",      c: 0, r: 1, k: "person", p: 0 },
       { id: "net",     t: "Gateway e rede",      s: "APIs e rotas",              c: 0, r: 2, k: "person", p: 0 },
       { id: "us",      t: "Time de automações",  s: "Hub, MCP, eventos, agentes", c: 1, r: 0, h: 3, k: "core", p: 0 },
-      { id: "stellar", t: "Squad Stellar",       s: "chat dos funcionários",     c: 2, r: 0, k: "person", p: 0 },
+      { id: "stellar", t: "Squad Stellar",       s: "o chat interno",            c: 2, r: 0, k: "person", p: 0 },
       { id: "llm",     t: "Time do Asimov",      s: "gateway de modelos",        c: 2, r: 1, k: "person", p: 0 },
       { id: "zones",   t: "Operações",           s: "zonas e donos de negócio",  c: 2, r: 2, k: "person", p: 0 }
     ],
@@ -262,7 +262,8 @@ window.TEAM = {
     ["Pipeline híbrido", "Regra primeiro; o modelo entra no que sobra", ""],
     ["Agente", "Ferramentas, estado e passos que mudam a cada caso", "última escolha"]
   ],
-  /* [área, função, hoje, com a plataforma, abordagem, grupo do filtro, nível, continua com pessoas, fase, agente, proposta] */
+  /* [área, função, hoje, com a plataforma, abordagem, grupo do filtro, nível, continua com pessoas, fase, agente, proposta, tema]
+     tema: só nas funções do ServiceNow e do Stellar; é o filtro da página do time do ServiceNow */
   functions: [
     ["Demanda", "Triagem e intake de demandas", "Alguém lê o ticket, pede esclarecimento e classifica", "Estrutura a demanda, prepara as perguntas e diz se o caso pede código, RPA, chamada de modelo ou agente", "Agente", "agente", "Substitui", "Decidir se a demanda entra", "2", "Intake", 0],
     ["Demanda", "Busca de solução existente", "Depende da memória de quem atende", "Consulta o catálogo e responde com a automação que já resolve", "Busca em fontes", "busca", "Substitui", "Confirmar o reaproveitamento", "2", "", 0],
@@ -279,24 +280,37 @@ window.TEAM = {
     ["Operação", "Dúvidas sobre automações", "Alguém responde no chat ou por e-mail", "Responde a partir do catálogo e das execuções: existe, qual o status, quem é o dono", "Busca em fontes", "busca", "Substitui", "Casos fora do catálogo", "4", "", 0],
     ["Operação", "Relatório de status e indicadores", "Montado à mão todo mês", "Rascunho gerado dos dados do Hub: volume, sucesso, entregas", "Código + chamada de modelo", "modelo", "Substitui", "A mensagem para a liderança", "4", "", 0],
     ["Operação", "Inventário e desligamento do legado", "Levantamento manual do que ainda roda", "Uso real por automação, candidatas a aposentar e plano sugerido", "Código + chamada de modelo", "modelo", "Acelera", "Decidir o que desliga e quando", "4", "", 0],
-    ["ServiceNow", "Integração de um time com o ServiceNow", "Trigger novo e chamada nova", "O time assina o evento ou usa uma ferramenta do MCP", "Plataforma", "plataforma", "Autoatendimento", "Aprovar um tipo novo de evento", "2", "", 0],
-    ["ServiceNow", "Membros de grupos sem papel", "Pedido feito à mão", "Ferramenta verde do MCP, com auditoria", "Plataforma", "plataforma", "Autoatendimento", "Nenhuma, dentro do semáforo", "3", "", 0],
-    ["ServiceNow", "Configuração de ofertas e catálogo", "Desenvolvedor configura item, variáveis e fluxo", "Cria o rascunho em sub-produção, com change request", "Agente", "agente", "Acelera", "Revisar e promover", "4", "Now Dev", 0],
-    ["ServiceNow", "Classificação e roteamento de tickets", "Triagem manual até o grupo certo", "Uma chamada de modelo classifica e sugere o grupo", "Chamada de modelo", "modelo", "Substitui", "Tratar o que o modelo marcou como incerto", "4", "", 0],
-    ["ServiceNow", "Artigos de conhecimento", "Escritos à mão, quando alguém lembra", "Rascunho a partir dos tickets resolvidos sobre o mesmo tema", "Busca em fontes", "busca", "Acelera", "Revisar e publicar", "4", "", 0],
-    ["ServiceNow", "Teste de regressão de ofertas", "Teste manual a cada mudança", "Pede as ofertas em sub-produção e confere o resultado", "Agente", "agente", "Acelera", "Aceitar a mudança", "4", "QA", 0],
-    ["Stellar", "Novo caso de uso no chat", "Integração construída caso a caso", "Configuração de ferramentas do MCP no chat", "Plataforma", "plataforma", "Autoatendimento", "Desenhar a conversa", "4", "", 0],
-    ["Stellar", "Avaliação das respostas do chat", "Revisão manual por amostragem", "Conjunto de avaliação, com um modelo como juiz e amostra humana", "Chamada de modelo", "modelo", "Acelera", "Definir o que é uma boa resposta", "4", "", 0],
-    ["ServiceNow", "Revisão de scripts e de update sets", "Revisor humano lê tudo antes de promover", "Aponta desvios das boas práticas do time antes da promoção", "Chamada de modelo", "modelo", "Acelera", "Aprovar a promoção", "", "", 1],
-    ["ServiceNow", "Testes automatizados de ofertas e flows", "Escritos à mão, quando sobra tempo", "Rascunho do teste a partir das variáveis e do flow da oferta", "Agente", "agente", "Acelera", "Revisar e manter a suíte", "", "", 1],
-    ["ServiceNow", "Triagem de upgrade e de patch", "Registros pulados revisados um a um", "Compara a versão customizada com a nova e sugere manter, reverter ou mesclar", "Chamada de modelo + código", "modelo", "Acelera", "Decidir cada registro", "", "", 1],
-    ["ServiceNow", "Documentação de ofertas e flows", "Depende de quem construiu", "Descrição gerada da própria configuração", "Chamada de modelo", "modelo", "Substitui", "Revisão rápida", "", "", 1],
-    ["ServiceNow", "Impacto de uma mudança no ServiceNow", "Perguntar a quem lembra onde o item é usado", "Lista flows, regras, ofertas e integrações que usam o item", "Código + busca", "busca", "Substitui", "Decidir a janela e a comunicação", "", "", 1],
-    ["ServiceNow", "Higiene do catálogo", "Ofertas sem uso ou duplicadas ficam no ar", "Relatório periódico; um modelo agrupa as ofertas parecidas", "Código + chamada de modelo", "modelo", "Assiste", "Decidir o que aposentar", "", "", 1],
-    ["ServiceNow", "Saúde de grupos e de regras de atribuição", "Descoberto quando um ticket fica parado", "Checagem agendada: grupo sem membro, regra que aponta para grupo inativo", "Código", "plataforma", "Substitui", "Corrigir o cadastro", "", "", 1],
-    ["ServiceNow", "Candidatos a problema", "Incidentes repetidos percebidos só por quem atende", "Agrupa incidentes parecidos e sugere abrir um problema, com a evidência", "Chamada de modelo + código", "modelo", "Assiste", "Abrir e conduzir o problema", "", "", 1],
-    ["ServiceNow", "Notas de release", "Escritas à mão a cada release", "Resumo gerado das mudanças do release", "Chamada de modelo", "modelo", "Substitui", "Revisar e publicar", "", "", 1],
-    ["ServiceNow", "Diagnóstico de falha de flow e de integração", "Garimpar o log de execução do flow", "Cruza o erro do flow, o log da integração e as mudanças recentes", "Pipeline híbrido", "hibrido", "Acelera", "Decidir a correção", "", "", 1]
+    ["ServiceNow", "Atendimento de oferta sem tarefa manual", "A oferta termina em tarefa manual para o grupo solucionador", "A ação de Flow chama a automação do catálogo, e o callback fecha o item", "Plataforma", "plataforma", "Substitui", "Atender o que a automação devolveu", "1", "", 0, "operacao"],
+    ["ServiceNow", "Integração de um time com o ServiceNow", "Trigger novo e chamada nova", "O time assina o evento ou usa uma ferramenta do MCP", "Plataforma", "plataforma", "Autoatendimento", "Aprovar um tipo novo de evento", "2", "", 0, "dev"],
+    ["ServiceNow", "Reuso: o que já existe", "Achar oferta, formulário ou automação parecida depende de quem lembra", "Pela IDE, as ferramentas listam ofertas, variáveis, eventos e automações", "Plataforma", "plataforma", "Autoatendimento", "Decidir reaproveitar ou criar", "2", "", 0, "dev"],
+    ["ServiceNow", "Membros de grupos sem papel", "Pedido feito à mão", "Ferramenta verde do MCP, com auditoria", "Plataforma", "plataforma", "Autoatendimento", "Nenhuma, dentro do semáforo", "3", "", 0, "operacao"],
+    ["ServiceNow", "Criação de ofertas", "Item, categoria, flow e regra de atribuição configurados à mão, a partir do ticket", "Rascunho da oferta em sub-produção, com change request, a partir da oferta mais parecida", "Agente", "agente", "Acelera", "Revisar e promover", "4", "Now Dev", 0, "catalogo"],
+    ["ServiceNow", "Formulários de ofertas", "Variáveis, tipos, opções e obrigatoriedade criados um a um", "O formulário nasce com o rascunho, com as variáveis ligadas aos parâmetros da automação", "Agente", "agente", "Acelera", "Revisar a experiência de quem pede", "4", "Now Dev", 0, "catalogo"],
+    ["ServiceNow", "Flows de ofertas, no Flow Designer", "Flow montado passo a passo, com script para cada integração", "O flow padrão nasce com o rascunho: aprovação, ação de automação e desfecho", "Agente", "agente", "Acelera", "Revisar a lógica e publicar", "4", "Now Dev", 0, "catalogo"],
+    ["ServiceNow", "Classificação e roteamento de tickets", "Triagem manual até o grupo certo", "Uma chamada de modelo classifica e sugere o grupo", "Chamada de modelo", "modelo", "Acelera", "Confirmar a sugestão e tratar o incerto", "4", "", 0, "operacao"],
+    ["ServiceNow", "Diagnóstico de prazo em risco", "Quando o prazo aperta, alguém abre o ticket para descobrir onde parou", "O aviso de prazo vira evento, e o diagnóstico chega como nota no ticket", "Pipeline híbrido", "hibrido", "Acelera", "Decidir a ação: cobrar, reatribuir ou escalar", "4", "Operação", 0, "operacao"],
+    ["ServiceNow", "Artigos de conhecimento", "Escritos à mão, quando alguém lembra", "Rascunho a partir dos tickets resolvidos sobre o mesmo tema", "Busca em fontes", "busca", "Acelera", "Revisar e publicar", "4", "", 0, "conhecimento"],
+    ["ServiceNow", "Teste de regressão de ofertas", "Conferir cada oferta depois de uma mudança toma tempo", "Pede as ofertas em sub-produção e confere o resultado", "Agente", "agente", "Acelera", "Aceitar a mudança", "4", "QA", 0, "dev"],
+    ["Stellar", "Pedidos e consultas pelo Stellar", "Sem ferramentas comuns, cada caso de uso novo no chat pede a própria integração", "O Stellar usa o ServiceNow e o catálogo de automações como ferramentas, com a identidade de quem conversa", "Plataforma", "plataforma", "Autoatendimento", "Desenhar a conversa", "4", "", 0, "chat"],
+    ["ServiceNow", "Contrato de SLA e de OLA", "Definição montada à mão: condições, calendário e duração", "Rascunho da definição a partir do combinado e de um SLA parecido, com uma ferramenta nova", "Agente", "agente", "Acelera", "Negociar o prazo e aprovar", "", "Now Dev", 1, "catalogo"],
+    ["ServiceNow", "Regras de tela e conjuntos de variáveis", "Configurados à mão em cada oferta", "O rascunho reaproveita os conjuntos do time e propõe as regras de tela, com uma ferramenta nova", "Agente", "agente", "Acelera", "Revisar a experiência do formulário", "", "Now Dev", 1, "catalogo"],
+    ["ServiceNow", "Flows fora do padrão", "Montados do zero no Flow Designer", "Rascunho a partir dos modelos de flow do time, com as entradas preenchidas", "Agente", "agente", "Acelera", "Revisar a lógica e publicar", "", "Now Dev", 1, "catalogo"],
+    ["ServiceNow", "Higiene do catálogo", "Ofertas sem uso ou duplicadas ficam no ar", "Relatório periódico; um modelo agrupa as ofertas parecidas", "Código + chamada de modelo", "modelo", "Assiste", "Decidir o que aposentar", "", "", 1, "catalogo"],
+    ["ServiceNow", "Refinamento de demandas", "Alguém entende o pedido, pergunta e escreve a história", "História com critérios de aceite e perguntas de esclarecimento, em rascunho", "Chamada de modelo", "modelo", "Acelera", "Priorizar e decidir o que entra", "", "", 1, "dev"],
+    ["ServiceNow", "Desenho conferido contra os padrões do time", "O arquiteto confere caso a caso", "Aponta os desvios dos padrões do time, com citação", "Busca em fontes", "busca", "Acelera", "Decidir os desvios", "", "", 1, "dev"],
+    ["ServiceNow", "Impacto de uma mudança no ServiceNow", "Perguntar a quem lembra onde o item é usado", "Lista flows, regras, ofertas e integrações que usam o item", "Código + busca", "busca", "Substitui", "Decidir a janela e a comunicação", "", "", 1, "dev"],
+    ["ServiceNow", "Revisão de scripts e de update sets", "Revisor humano lê tudo antes de promover", "Aponta desvios das boas práticas do time antes da promoção", "Chamada de modelo", "modelo", "Acelera", "Aprovar a promoção", "", "", 1, "dev"],
+    ["ServiceNow", "Testes automatizados de ofertas e flows", "Escritos à mão, quando sobra tempo", "Rascunho do teste a partir das variáveis e do flow da oferta", "Agente", "agente", "Acelera", "Revisar e manter a suíte", "", "", 1, "dev"],
+    ["ServiceNow", "Documentação de ofertas e flows", "Depende de quem construiu", "Descrição gerada da própria configuração", "Chamada de modelo", "modelo", "Substitui", "Revisão rápida", "", "", 1, "dev"],
+    ["ServiceNow", "Notas de release", "Escritas à mão a cada release", "Resumo gerado das mudanças do release", "Chamada de modelo", "modelo", "Substitui", "Revisar e publicar", "", "", 1, "dev"],
+    ["ServiceNow", "Triagem de upgrade e de patch", "Registros pulados revisados um a um", "Compara a versão customizada com a nova e sugere manter, reverter ou mesclar", "Chamada de modelo + código", "modelo", "Acelera", "Decidir cada registro", "", "", 1, "dev"],
+    ["ServiceNow", "Resumo da daily e status do time", "Cada um relata de memória, e o status é montado à mão", "Rascunho do que mudou desde ontem, por item de trabalho, com os bloqueios", "Chamada de modelo", "modelo", "Assiste", "A conversa e as decisões", "", "", 1, "dev"],
+    ["ServiceNow", "Triagem de casos de RH", "Triagem manual, com dado pessoal no texto", "A mesma classificação, em outra tabela, depois da avaliação de privacidade", "Chamada de modelo", "modelo", "Acelera", "Tratar o incerto; o RH define as permissões", "", "", 1, "operacao"],
+    ["ServiceNow", "Diagnóstico de falha de flow e de integração", "Garimpar o log de execução do flow", "Cruza o erro do flow, o log da integração e as mudanças recentes", "Pipeline híbrido", "hibrido", "Acelera", "Decidir a correção", "", "", 1, "operacao"],
+    ["ServiceNow", "Candidatos a problema", "Incidentes repetidos percebidos só por quem atende", "Agrupa incidentes parecidos e sugere abrir um problema, com a evidência", "Chamada de modelo + código", "modelo", "Assiste", "Abrir e conduzir o problema", "", "", 1, "operacao"],
+    ["ServiceNow", "Saúde de grupos e de regras de atribuição", "Descoberto quando um ticket fica parado", "Checagem agendada: grupo sem membro, regra que aponta para grupo inativo", "Código", "plataforma", "Substitui", "Corrigir o cadastro", "", "", 1, "operacao"],
+    ["ServiceNow", "Relatório do serviço", "Alguém cruza volume e tempo para escrever o relatório", "Volume por oferta e tempo por grupo vêm das ferramentas; um modelo redige o texto", "Código + chamada de modelo", "modelo", "Substitui", "A mensagem para quem pede", "", "", 1, "operacao"],
+    ["ServiceNow", "Lacunas e revisão da base de conhecimento", "Artigo vencido ou em falta só aparece quando alguém reclama", "Lista periódica: temas com muitos tickets e sem artigo, e artigos vencidos ou duplicados", "Código + chamada de modelo", "modelo", "Assiste", "Decidir o que escrever e o que aposentar", "", "", 1, "conhecimento"]
   ],
   groups: [["", "Todas"], ["agente", "Agente"], ["modelo", "Chamada de modelo"], ["busca", "Busca em fontes"], ["hibrido", "Pipeline híbrido"], ["plataforma", "Plataforma ou código"]],
   build: [

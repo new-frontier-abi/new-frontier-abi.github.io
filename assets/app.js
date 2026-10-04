@@ -64,7 +64,7 @@
       U.sect(null, "Os sete agentes", "Cada um recebe uma entrada estruturada e devolve algo que uma pessoa aprova.") +
       U.table(["Agente", "Entrega", "Fase"], D.agents, ["nb", "", "nb"]) +
       "<p class='aside'><b>Onde um agente não entra.</b> " + esc(D.notAgent) + "</p>" +
-      "<p class='aside'><b>Para o time do ServiceNow.</b> O formulário, o flow, a regra e o evento que cada caso entrega estão na página <a href='servicenow/'>ServiceNow</a>.</p>");
+      "<p class='aside'><b>Para o time do ServiceNow.</b> O modelo de operação, o de desenvolvimento e os exemplos, cada um com o desenho técnico, estão na página <a href='servicenow/'>ServiceNow</a>.</p>");
   }
 
   /* ---------- 4 · Fases: o mapa mostra o que existe em cada fase ---------- */
