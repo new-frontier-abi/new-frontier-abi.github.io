@@ -111,7 +111,7 @@ window.TEAM = {
       ["Event Hubs, 1 unidade", "Fase 2"]
     ]],
     ["Identidade", [
-      ["Registros de aplicativo: Hub, MCP, eventos, console", "agora"],
+      ["Registros de aplicativo: Hub, MCP e eventos", "agora"],
       ["ServiceNow como chamador do Hub", "agora"],
       ["Token em nome do usuário até o ServiceNow", "agora"]
     ]],
