@@ -1,4 +1,4 @@
-/* Tema do site: branco por padrão, escuro por escolha. A escolha fica guardada e vale para as duas páginas.
+/* Tema do site: branco por padrão, escuro por escolha. A escolha fica guardada e vale para as três páginas.
    ?tema=escuro ou ?tema=claro no endereço abre direto em um deles. Carregado no <head>, antes do primeiro desenho. */
 (function () {
   "use strict";

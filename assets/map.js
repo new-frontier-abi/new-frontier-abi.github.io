@@ -25,7 +25,8 @@
     return d + " L" + z[0] + " " + z[1];
   }
 
-  /* data: conjunto { nodes, edges, zone, geo } a desenhar; sem ele, vale window.DW. geo ajusta a grade e a largura máxima. */
+  /* data: conjunto { nodes, edges, zone ou zones, geo } a desenhar; sem ele, vale window.DW. geo ajusta a grade e a largura máxima.
+     Ligação: reta entre vizinhos da mesma linha ou coluna; bend "hv" ou "vh" faz um L; row fixa a linha de uma reta entre nós altos. */
   function DWMap(svg, data) {
     var D = data || window.DW, id = "m" + (++uid), N = {}, E = {}, B = {}, run = 0, G = {}, k;
     for (k in G0) G[k] = D.geo && D.geo[k] != null ? D.geo[k] : G0[k];
@@ -40,17 +41,26 @@
     }
     D.nodes.forEach(function (n) { B[n.id] = box(n); });
 
+    function rowY(r) { return G.py + (r - rMin) * G.rp + G.nh / 2; }
     function points(e) {
       var a = B[e.a], b = B[e.b];
       if (e.elbow) {                                   /* sobe, anda no corredor entre as linhas, sobe de novo */
         var x = a.x + G.nw * e.elbow, gy = a.y - (G.rp - G.nh) / 2;
         return [[x, a.y], [x, gy], [b.cx, gy], [b.cx, b.y + b.h]];
       }
+      if (e.bend === "hv") {                           /* sai pelo lado de a, anda até a coluna de b e entra por cima ou por baixo */
+        var hy = e.row != null ? rowY(e.row) : a.cy, hx = b.x + G.nw * (e.at || 0.5);
+        return [[hx > a.cx ? a.x + a.w : a.x, hy], [hx, hy], [hx, b.cy > hy ? b.y : b.y + b.h]];
+      }
+      if (e.bend === "vh") {                           /* sai por cima ou por baixo de a, anda até a linha de b e entra pelo lado */
+        var sx = a.x + G.nw * (e.at || 0.5), sy = e.row != null ? rowY(e.row) : b.cy;
+        return [[sx, sy > a.cy ? a.y + a.h : a.y], [sx, sy], [b.cx > sx ? b.x : b.x + b.w, sy]];
+      }
       if (a.c === b.c) {                               /* mesma coluna: vertical */
         var vx = a.x + G.nw * (e.at || 0.5);
         return a.y < b.y ? [[vx, a.y + a.h], [vx, b.y]] : [[vx, a.y], [vx, b.y + b.h]];
       }
-      var y = a.h > G.nh ? b.cy : a.cy;                /* nó alto: usa a altura do vizinho */
+      var y = e.row != null ? rowY(e.row) : a.h > G.nh ? b.cy : a.cy;   /* nó alto: usa a altura do vizinho, ou a linha pedida */
       return a.x < b.x ? [[a.x + a.w, y], [b.x, y]] : [[a.x, y], [b.x + b.w, y]];
     }
 
@@ -67,12 +77,12 @@
     });
     svg.appendChild(defs);
 
-    if (D.zone) {
-      var z = D.zone, x0 = G.px + z.c0 * G.cp - 18, y0 = G.py + (z.r0 - rMin) * G.rp - 18;
-      var x1 = G.px + z.c1 * G.cp + G.nw + 18, y1 = G.py + (z.r1 - rMin) * G.rp + G.nh + 18;
+    (D.zones || (D.zone ? [D.zone] : [])).forEach(function (z) {   /* zonas: caixas tracejadas com rótulo, atrás de tudo */
+      var m = z.pad != null ? z.pad : 18, x0 = G.px + z.c0 * G.cp - m, y0 = G.py + (z.r0 - rMin) * G.rp - m;
+      var x1 = G.px + z.c1 * G.cp + G.nw + m, y1 = G.py + (z.r1 - rMin) * G.rp + G.nh + m;
       svg.appendChild(el("rect", { "class": "zone", x: x0, y: y0, width: x1 - x0, height: y1 - y0, rx: 14 }));
       svg.appendChild(el("text", { "class": "zone-l", x: x0 + 4, y: y0 - 9 }, z.label));
-    }
+    });
 
     var gE = el("g", {}), gN = el("g", {}), gT = el("g", {});
     svg.appendChild(gE); svg.appendChild(gN); svg.appendChild(gT);
@@ -102,6 +112,7 @@
         g.appendChild(ic);
       }
       if (/agent/.test(n.k)) g.appendChild(el("path", { "class": "ico", transform: "translate(" + (b.x + b.w - 28) + "," + (b.y + 11) + ")", d: "M8 0l2 6l6 2l-6 2l-2 6l-2-6l-6-2l6-2z" }));
+      if (/az/.test(n.k)) g.appendChild(el("path", { "class": "ico", transform: "translate(" + (b.x + b.w - 27) + "," + (b.y + 11) + ")", d: "M7 0.5l6 3.4v6.9l-6 3.4l-6-3.4V3.9z" }));   /* serviço do Azure */
       gN.appendChild(g);
       N[n.id] = { def: n, g: g, s: s, base: "nd " + n.k };
     });

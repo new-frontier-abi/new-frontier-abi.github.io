@@ -1,4 +1,4 @@
-/* Conteúdo da página do time de automações. Três mapas pequenos (jornada, times) e listas curtas.
+/* Conteúdo da página do time de automações: os mapas da jornada, do ambiente e dos times, e listas curtas.
    p: passo da jornada em que o nó ou a ligação passa a existir. until: último passo em que a ligação aparece. */
 window.TEAM = {
   /* ---------- 1 · Jornada ---------- */
@@ -66,6 +66,45 @@ window.TEAM = {
         items: ["Permissão por automação e por zona", "Sucesso e custo medidos por automação", "O legado é desligado quando as ondas terminam"],
         gate: "Legado desligado e custo por execução acompanhado",
         ghost: ["legacy"], subs: { legacy: "desligadas" } }
+    ]
+  },
+
+  /* ---------- 1 · Por dentro: o ambiente de dev e a esteira. Só tipo de serviço e papel. ---------- */
+  env: {
+    id: "env", tag: "Ambiente e esteira",
+    title: "Do pull request ao cluster de dev",
+    lead: "Código e ambiente entram pelo mesmo caminho: repositório, revisão e esteira. Nada é criado à mão.",
+    map: {
+      nodes: [
+        { id: "eng",  t: "Engenheiro",         s: "revisa e aprova",          c: 0, r: 0, k: "person" },
+        { id: "ag",   t: "Agente",             s: "abre pull request",        c: 0, r: 1, k: "core agent" },
+        { id: "repo", t: "Repositórios",       s: "um por peça",              c: 1, r: 0, h: 2, k: "ext",
+          ports: [{ r: 0, t: "serviços" }, { r: 1, t: "ambiente" }] },
+        { id: "ci",   t: "Esteira",            s: "testa, analisa, publica",  c: 2, r: 0, k: "ext" },
+        { id: "tf",   t: "Infra como código",  s: "descreve o ambiente",      c: 2, r: 1, k: "ext" },
+        { id: "cd",   t: "Deploy declarativo", s: "lê do repositório",        c: 3, r: 0, k: "ext" },
+        { id: "az",   t: "Recursos Azure",     s: "banco, filas, cofre",      c: 3, r: 1, k: "az" },
+        { id: "k8s",  t: "Cluster de dev",     s: "pequeno, um por ambiente", c: 4, r: 0, h: 2, k: "az",
+          ports: [{ r: 0, t: "serviços", side: "l" }, { r: 1, t: "identidades", side: "l" }] }
+      ],
+      edges: [
+        { id: "eng-repo", a: "eng",  b: "repo" },
+        { id: "ag-repo",  a: "ag",   b: "repo" },
+        { id: "repo-ci",  a: "repo", b: "ci" },
+        { id: "ci-cd",    a: "ci",   b: "cd" },
+        { id: "cd-k8s",   a: "cd",   b: "k8s" },
+        { id: "repo-tf",  a: "repo", b: "tf" },
+        { id: "tf-az",    a: "tf",   b: "az" },
+        { id: "az-k8s",   a: "az",   b: "k8s" }
+      ]
+    },
+    steps: [
+      { path: ["eng", "repo"], t: "Toda mudança entra por pull request", d: "Automação, serviço ou ambiente: tudo passa por revisão no repositório." },
+      { path: ["ag", "repo"], t: "O agente passa pelos mesmos gates", d: "Testes, análise de código e aprovação de uma pessoa. Agente não aprova nem faz merge." },
+      { path: ["repo", "ci"], t: "A esteira testa, analisa e publica", d: "Uma imagem por serviço e por domínio de automação. O catálogo é publicado a cada versão." },
+      { path: ["ci", "cd", "k8s"], t: "O deploy lê do repositório", d: "O que está no repositório é o que roda. Voltar atrás é reverter o commit." },
+      { path: ["repo", "tf", "az"], t: "O ambiente também é código", d: "Um comando recria o dev do zero: cluster pequeno, banco, filas, cofre e identidades." },
+      { path: ["az", "k8s"], t: "Cada serviço recebe só o que precisa", d: "Identidade própria, a fila do próprio domínio e os segredos do próprio cofre." }
     ]
   },
 

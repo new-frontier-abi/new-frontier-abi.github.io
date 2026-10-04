@@ -1,6 +1,7 @@
-/* Conteúdo do site. Um só mapa (nodes + edges); pieces, links, scenarios e phases apontam para ele.
+/* Conteúdo da página da plataforma. Um mapa executivo (nodes + edges): pieces, links, scenarios e phases apontam para ele.
+   tech traz os desenhos técnicos, cada um com o próprio mapa.
    c, r: coluna e linha na grade. h: altura em linhas. p: fase em que nasce (-1 = já existe hoje). */
-window.DW = {
+window.DW = Object.assign(window.DW || {}, {
   nodes: [
     { id: "user",   t: "Funcionário",        s: "pede no catálogo",          c: 0, r: 0.5, k: "person", p: -1 },
     { id: "now",    t: "ServiceNow",         s: "catálogo, tickets, flows",  c: 1, r: 0, h: 2, k: "ext", p: -1,
@@ -43,7 +44,19 @@ window.DW = {
     { id: "mcp", name: "ServiceNow MCP", phase: "Fases 2 e 3", text: "O ServiceNow como ferramentas de negócio, com a identidade e as permissões de quem pede. Leitura primeiro; escrita governada depois." },
     { id: "ag",  name: "Agentes", phase: "Fases 2 a 4", text: "Assumem o trabalho repetitivo de entrega e de operação, usando as outras três peças. Pessoas decidem nos pontos de aprovação." }
   ],
+  /* o que está em volta da plataforma no mapa executivo */
+  outside: {
+    user: "Quem pede. Nada muda para ele: o pedido continua entrando pelo catálogo do ServiceNow.",
+    now: "A origem dos pedidos e dos eventos. Chama o Hub por uma ação de Flow e publica os eventos selecionados.",
+    nowapi: "O mesmo ServiceNow, visto como sistema: as ferramentas leem com as ACLs do usuário e configuram só em sub-produção.",
+    llm: "O gateway corporativo de modelos. Único caminho dos agentes para um modelo de linguagem.",
+    target: "Onde a automação age: Entra ID, SAP e os demais sistemas com API.",
+    client: "Os clientes do MCP: o chat dos funcionários e a IDE do próprio time.",
+    ci: "Repositório, testes e deploy. O pull request de um agente passa pelos mesmos gates de um pull request humano.",
+    team: "As pessoas do Digital Workplace nos pontos de decisão: priorizar, revisar, aprovar e promover."
+  },
   links: [
+    { edges: ["user-now"],         name: "Funcionário ↔ ServiceNow",      text: "O pedido entra pelo catálogo e o aviso volta pela notificação de sempre. Nada muda para quem pede." },
     { edges: ["now-hub"],          name: "ServiceNow ↔ Automation Hub",   text: "Uma ação de Flow única: qualquer oferta chama qualquer automação do catálogo. O desfecho volta por callback e fecha o item." },
     { edges: ["now-eh"],           name: "ServiceNow → Now Event Hub",    text: "Uma regra publicadora envia os eventos selecionados, só com identificadores. Evento novo é uma linha no registro." },
     { edges: ["eh-hub"],           name: "Now Event Hub ↔ Automation Hub", text: "Uma assinatura liga um evento a uma automação, sem código novo. O Hub também publica o desfecho de cada execução." },
@@ -57,10 +70,10 @@ window.DW = {
     { edges: ["ag-ci", "ci-team", "ag-team"], name: "Agentes → Time DW",  text: "Agentes entregam pull request, rascunho ou diagnóstico. Uma pessoa revisa, aprova e decide." }
   ],
   rules: [
-    ["Determinístico primeiro", "Código para regra fixa. Uma chamada de modelo para um passo só. Agente apenas quando há ferramentas, estado e passos adaptativos."],
-    ["Menor privilégio", "As ferramentas agem com a identidade de quem pede. Verde é autoatendimento; amarelo só escreve em sub-produção; vermelho vira pedido de aprovação."],
-    ["Um gateway de modelos", "Toda chamada de modelo passa pelo Asimov, com limite de custo, de tempo e de iterações por execução."],
-    ["Pessoa no controle", "Toda entrega de agente termina em uma revisão humana: pull request, rascunho em sub-produção ou diagnóstico."]
+    ["Determinístico primeiro", "Código para regra fixa. Uma chamada de modelo para um passo só. Agente só quando há ferramentas, estado e passos que mudam."],
+    ["Menor privilégio", "Cada serviço tem a própria identidade. As ferramentas agem com as permissões de quem pede."],
+    ["Um gateway de modelos", "Toda chamada de modelo passa pelo Asimov, com limite de custo, de tempo e de iterações."],
+    ["Pessoa no controle", "Toda entrega de agente termina em uma revisão humana."]
   ],
 
   /* ---------- 2 · Autoatendimento no ServiceNow (POC) ---------- */
@@ -72,13 +85,13 @@ window.DW = {
 
   /* ---------- 3 · Agentes ---------- */
   agents: [
-    ["Intake", "Triagem e refinamento do pedido", "Demanda estruturada e classificada", "2 (piloto)"],
-    ["ROI", "Planilha de caso de negócio", "Volume, horas economizadas e prioridade sugerida", "2 (piloto)"],
-    ["Arquitetura", "Desenho inicial e checagem de padrão", "Proposta, riscos e desvios de padrão", "3"],
-    ["Pré-código", "Primeira versão da automação", "Pull request com automação, manifesto e testes", "3"],
-    ["QA", "Escrita e execução de testes", "Casos executados e evidências no pull request", "3"],
-    ["Now Dev", "Configuração repetitiva no ServiceNow", "Rascunho em sub-produção, com change request", "4"],
-    ["Operação", "Análise de falha e de prazo", "Causa provável e correção sugerida", "4"]
+    ["Intake", "Demanda estruturada e classificada", "2 (piloto)"],
+    ["ROI", "Caso de negócio, com a origem de cada número", "2 (piloto)"],
+    ["Arquitetura", "Proposta, riscos e desvios de padrão", "3"],
+    ["Pré-código", "Pull request com automação, manifesto e testes", "3"],
+    ["QA", "Casos executados e evidências no pull request", "3"],
+    ["Now Dev", "Rascunho em sub-produção, com change request", "4"],
+    ["Operação", "Causa provável e correção sugerida", "4"]
   ],
   roles: [
     ["Analista de intake e de negócio", "Montar triagem e planilha", "Validar o que o agente trouxe e decidir"],
@@ -88,24 +101,19 @@ window.DW = {
     ["Desenvolvedor ServiceNow", "Configurar item a item e criar trigger por integração", "Revisar rascunhos e manter flows e a regra publicadora"],
     ["Plantão e suporte", "Garimpar log", "Receber o diagnóstico pronto e decidir a correção"]
   ],
-  notAgent: [
-    ["Executar a automação", "É regra fixa: código, com teste."],
-    ["Calcular o retorno", "É conta: código. O modelo interpreta o pedido, não faz a aritmética."],
-    ["Aprovar pull request e produção", "Responsabilidade de uma pessoa, sempre."],
-    ["Conceder acesso ou papel", "Nunca direto: processo de aprovação do ServiceNow."]
-  ],
+  notAgent: "Executar a automação e calcular o retorno são código, com teste. Aprovar pull request, promover para produção e conceder acesso são sempre de uma pessoa.",
 
   /* ---------- exemplos: path percorre ligações do mapa; sub troca a segunda linha de um nó naquele passo ---------- */
   acts: {
     autoatendimento: [{ name: null, ids: ["s-pedido", "s-evento", "s-mcp"] }],
     agentes: [
-      { name: "Operação do ServiceNow", ids: ["s-nowdev", "s-triagem"] },
-      { name: "Time de automações", ids: ["s-demanda", "s-falha"] },
+      { name: "ServiceNow", ids: ["s-nowdev", "s-triagem"] },
+      { name: "Automações", ids: ["s-demanda", "s-falha"] },
       { name: "Operações", ids: ["s-chat"] }
     ]
   },
   scenarios: [
-    { id: "s-pedido", phase: 1, title: "Um pedido resolvido sem ninguém no caminho",
+    { id: "s-pedido", short: "Pedido sem toque", phase: 1, title: "Um pedido resolvido sem ninguém no caminho",
       today: "Cada oferta tem a própria integração, e muitas terminam em tarefa manual.",
       steps: [
         { path: ["user", "now"], t: "Ana pede acesso a um grupo", d: "Pelo catálogo do ServiceNow, como hoje. Nada muda para quem pede." },
@@ -115,7 +123,7 @@ window.DW = {
         { path: ["hub", "now"], t: "O ServiceNow fecha o item", d: "O desfecho volta por callback. Se a automação falhar, o item vai para o grupo solucionador." },
         { path: ["now", "user"], t: "Ana é avisada", d: "Pela notificação de sempre. Ninguém do time tocou no pedido." }
       ] },
-    { id: "s-evento", phase: 2, title: "Um evento dispara a automação, sem trigger novo",
+    { id: "s-evento", short: "Evento dispara", phase: 2, title: "Um evento dispara a automação, sem trigger novo",
       today: "Cada integração nova pede um trigger novo e uma chamada nova no ServiceNow.",
       steps: [
         { path: ["now"], t: "Um item é aprovado no ServiceNow", d: "A mudança acontece no registro, como sempre." },
@@ -125,7 +133,7 @@ window.DW = {
         { path: ["hub", "eh"], t: "O desfecho também vira evento", d: "Quem quiser acompanhar assina. Um assinante novo não muda nada no ServiceNow." },
         { path: ["hub", "now"], t: "O item é atualizado", d: "O callback fecha o ciclo no próprio registro." }
       ] },
-    { id: "s-mcp", phase: 2, title: "O time se serve pelas ferramentas", sub: { client: "IDE do time" },
+    { id: "s-mcp", short: "Time se serve", phase: 2, title: "O time se serve pelas ferramentas", sub: { client: "IDE do time" },
       today: "Quem precisa de um dado do ServiceNow pede a alguém do time ou ganha uma integração própria.",
       steps: [
         { path: ["client", "mcp"], t: "Um engenheiro pergunta pela IDE", d: "Quantos pedidos esta oferta recebe por mês, e quanto tempo levam? A pergunta vira uma chamada de ferramenta." },
@@ -134,7 +142,7 @@ window.DW = {
         { path: ["mcp", "client"], t: "A resposta volta, e a chamada fica auditada", d: "Quem pediu, qual ferramenta, quando e com qual resultado." },
         { path: ["client", "mcp", "hub"], t: "O catálogo do Hub também é ferramenta", d: "Pela mesma porta ele lista as automações e executa uma em non-prod, sem integração nova." }
       ] },
-    { id: "s-nowdev", phase: 4, title: "O agente configura, o time do ServiceNow revisa", sub: { ag: "Agente Now Dev" },
+    { id: "s-nowdev", short: "Oferta nova", phase: 4, title: "O agente configura, o time do ServiceNow revisa", sub: { ag: "Agente Now Dev" },
       today: "Ofertas, grupos e regras são configurados à mão, um a um, a partir do ticket.",
       steps: [
         { path: ["now", "eh"], t: "Chega um pedido de oferta nova", d: "O ticket de intake vira um evento de demanda criada." },
@@ -145,7 +153,7 @@ window.DW = {
         { path: ["ag", "team"], t: "Um desenvolvedor do ServiceNow revisa", d: "O trabalho manual vira revisão. Ajustes voltam ao agente como comentário." },
         { path: ["team"], t: "A oferta é promovida", d: "Pelo processo normal de mudança do ServiceNow." }
       ] },
-    { id: "s-triagem", phase: 4, title: "Tickets classificados na criação", sub: { ag: "Chamada de modelo" },
+    { id: "s-triagem", short: "Triagem", phase: 4, title: "Tickets classificados na criação", sub: { ag: "Chamada de modelo" },
       today: "A triagem é manual até o ticket chegar ao grupo certo.",
       steps: [
         { path: ["now", "eh"], t: "Um incidente é aberto", d: "O ServiceNow publica o evento de incidente criado." },
@@ -154,7 +162,7 @@ window.DW = {
         { path: ["ag", "mcp", "nowapi"], t: "A sugestão é gravada no ticket", d: "Por uma ferramenta verde, com auditoria." },
         { path: ["ag", "team"], t: "O incerto vai para uma pessoa", d: "O time trata o que o modelo marcou como incerto e revisa o restante por amostragem." }
       ] },
-    { id: "s-demanda", phase: 3, title: "Uma demanda vira automação",
+    { id: "s-demanda", short: "Demanda vira automação", phase: 3, title: "Uma demanda vira automação",
       today: "Alguém do time faz triagem, caso de negócio, desenho, primeira versão do código e testes à mão.",
       steps: [
         { path: ["now", "eh"], t: "A operação abre uma demanda", d: "Pelo mesmo ticket que já existe. O evento de demanda criada aciona os agentes." },
@@ -168,7 +176,7 @@ window.DW = {
         { path: ["ci", "team"], t: "Decisão 2: um engenheiro aprova", d: "Revisa com proposta, código, testes e evidências em mãos." },
         { path: ["hub"], t: "A automação entra no catálogo", d: "Fica disponível para o ServiceNow e para os agentes e, na Fase 4, para o chat." }
       ] },
-    { id: "s-falha", phase: 4, title: "Uma falha chega com o diagnóstico pronto", sub: { ag: "Agente Operação" },
+    { id: "s-falha", short: "Falha diagnosticada", phase: 4, title: "Uma falha chega com o diagnóstico pronto", sub: { ag: "Agente Operação" },
       today: "A falha é descoberta depois, e o plantão garimpa log para entender.",
       steps: [
         { path: ["hub", "target"], t: "O sistema alvo está fora do ar", d: "A automação repete com espera. Esgotadas as tentativas, a execução fica separada, com todo o contexto." },
@@ -179,7 +187,7 @@ window.DW = {
         { path: ["ag", "team"], t: "O plantão recebe o diagnóstico pronto", d: "Uma pessoa decide: corrigir a automação, esperar o sistema voltar ou descartar." },
         { path: ["hub"], t: "Com o sistema de volta, uma pessoa reprocessa", d: "É a mesma execução: nada é criado em duplicidade." }
       ] },
-    { id: "s-chat", phase: 4, title: "O chat resolve com as mesmas automações", sub: { client: "Stellar" },
+    { id: "s-chat", short: "Chat", phase: 4, title: "O chat resolve com as mesmas automações", sub: { client: "Stellar" },
       today: "Cada integração do chat com o ServiceNow ou com uma automação é construída caso a caso.",
       steps: [
         { path: ["client", "mcp"], t: "O funcionário pede no chat", d: "Em linguagem natural, sem saber qual oferta ou qual automação existe." },
@@ -187,6 +195,235 @@ window.DW = {
         { path: ["mcp", "hub"], t: "Aciona uma automação do catálogo", d: "Cada automação publicada aparece como ferramenta. O time do Stellar não constrói a integração." },
         { path: ["hub", "target"], t: "A automação executa", d: "A mesma fila, o mesmo worker, o mesmo sistema alvo. Nada foi construído para o chat." },
         { path: ["mcp", "client"], t: "A resposta volta na conversa", d: "E o chat avisa do desfecho quando a execução termina." }
+      ] }
+  ],
+
+  /* ---------- Por dentro: como cada peça fica no Azure. Só tipo de serviço e papel: nomes e tamanhos ficam no repositório de infraestrutura. ----------
+     k: core = serviço da plataforma (roda no Kubernetes), az = serviço do Azure, ext = fora do Azure ou de outro time.
+     passo com path anda pelas ligações; passo com on acende um conjunto de nós. */
+  techLegend: [["act", "Passo atual"], ["new", "Já percorrido"], ["core", "Serviço da plataforma"], ["az", "Serviço do Azure"], ["ext", "Fora do Azure ou de outro time"]],
+  tech: [
+    { id: "all", label: "Plataforma inteira", tag: "Visão geral", focus: true,
+      title: "A plataforma inteira, por camada",
+      lead: "De cima para baixo: quem chama, a borda, os serviços no Kubernetes, os dados e o que fica fora do Azure. O Play mostra o que cada peça usa.",
+      map: {
+        geo: { rp: 124, py: 42, px: 30 },
+        nodes: [
+          { id: "now",     t: "ServiceNow",       s: "ofertas, flows, eventos",    c: 0.5, r: 0, k: "ext" },
+          { id: "client",  t: "Stellar e IDE",    s: "chat e time, pelo MCP",      c: 1.5, r: 0, k: "ext" },
+          { id: "other",   t: "Outros produtos",  s: "API, eventos ou MCP",        c: 2.5, r: 0, k: "ext" },
+          { id: "team",    t: "Time DW",          s: "opera e aprova",             c: 3.5, r: 0, k: "person" },
+          { id: "apim",    t: "API Management",   s: "token, cota, rastreio",      c: 0.5, r: 1, k: "az" },
+          { id: "entra",   t: "Entra ID",         s: "identidade de quem chama",   c: 1.5, r: 1, k: "az" },
+          { id: "ids",     t: "Identidades",      s: "uma por serviço, sem senha", c: 2.5, r: 1, k: "az" },
+          { id: "net",     t: "Rede privada",     s: "cluster e banco fechados",   c: 3.5, r: 1, k: "az" },
+          { id: "hubapi",  t: "Hub API",          s: "catálogo e execuções",       c: 0, r: 2, k: "core" },
+          { id: "workers", t: "Workers",          s: "um conjunto por domínio",    c: 1, r: 2, k: "core" },
+          { id: "ing",     t: "Ingestão",         s: "eventos do ServiceNow",      c: 2, r: 2, k: "core" },
+          { id: "mcp",     t: "ServiceNow MCP",   s: "ferramentas governadas",     c: 3, r: 2, k: "core" },
+          { id: "ag",      t: "Agentes",          s: "um worker por agente",       c: 4, r: 2, k: "core agent" },
+          { id: "pg",      t: "PostgreSQL",       s: "execuções e auditoria",      c: 0, r: 3, k: "az" },
+          { id: "sb",      t: "Service Bus",      s: "uma fila por domínio",       c: 1, r: 3, k: "az" },
+          { id: "eh",      t: "Event Hubs",       s: "eventos assináveis",         c: 2, r: 3, k: "az" },
+          { id: "kv",      t: "Key Vault",        s: "credenciais por domínio",    c: 3, r: 3, k: "az" },
+          { id: "blob",    t: "Blob Storage",     s: "arquivos das execuções",     c: 4, r: 3, k: "az" },
+          { id: "target",  t: "Sistemas alvo",    s: "Entra ID, SAP, outros",      c: 0, r: 4, k: "ext" },
+          { id: "llm",     t: "Asimov",           s: "gateway de modelos",         c: 1, r: 4, k: "ext" },
+          { id: "gh",      t: "Repositório",      s: "código e esteira",           c: 2, r: 4, k: "ext" },
+          { id: "dd",      t: "Observabilidade",  s: "log, rastro e métrica",      c: 3, r: 4, k: "ext" },
+          { id: "vm",      t: "Máquinas de tela", s: "automações de interface",    c: 4, r: 4, k: "ext" }
+        ],
+        zones: [
+          { c0: 0, c1: 4, r0: 0, r1: 0, label: "QUEM CHAMA" },
+          { c0: 0, c1: 4, r0: 1, r1: 1, label: "BORDA E IDENTIDADE" },
+          { c0: 0, c1: 4, r0: 2, r1: 2, label: "KUBERNETES · UM CLUSTER PEQUENO" },
+          { c0: 0, c1: 4, r0: 3, r1: 3, label: "DADOS E MENSAGENS · SERVIÇOS GERENCIADOS" },
+          { c0: 0, c1: 4, r0: 4, r1: 4, label: "FORA DO AZURE" }
+        ],
+        edges: []
+      },
+      steps: [
+        { on: ["now", "client", "other", "team", "apim", "entra"], t: "Tudo entra pelo gateway, com identidade",
+          d: "ServiceNow, chat, IDE e outros produtos chegam pela mesma borda: token do Entra ID, cota e rastreio por consumidor." },
+        { on: ["hubapi", "workers", "ing", "mcp", "ag", "ids", "net"], t: "Um cluster pequeno roda as quatro peças",
+          d: "Cada serviço tem a própria identidade e só alcança o que precisa. Cluster e banco ficam em rede privada." },
+        { on: ["apim", "entra", "hubapi", "workers", "pg", "sb", "kv", "blob", "target", "vm"], t: "O que o Automation Hub usa",
+          d: "Execuções no PostgreSQL, uma fila por domínio no Service Bus, credenciais no cofre e arquivos no Blob. Na Fase 4, automações de tela em máquinas dedicadas." },
+        { on: ["now", "apim", "ing", "pg", "eh"], t: "O que o Now Event Hub usa",
+          d: "A ingestão valida e deduplica cada evento do ServiceNow. O Event Hubs entrega a cada assinante, no ritmo dele." },
+        { on: ["client", "apim", "entra", "mcp", "pg", "kv", "now"], t: "O que o ServiceNow MCP usa",
+          d: "Não guarda sessão: cada chamada traz o token de quem pede. O MCP troca o token, aplica o semáforo e audita." },
+        { on: ["eh", "ag", "pg", "kv", "mcp", "hubapi", "llm", "gh"], t: "O que os agentes usam",
+          d: "São acionados por evento. O modelo vem do Asimov; as ferramentas, do MCP e do Hub; a entrega é um pull request." },
+        { on: ["gh", "dd", "team"], t: "Tudo observado, tudo entregue por esteira",
+          d: "Log, rastro e métrica por automação e por agente. O que roda no cluster é o que está no repositório." }
+      ] },
+
+    { id: "hub", label: "Automation Hub", tag: "Automation Hub",
+      title: "Uma execução, por dentro",
+      lead: "Do pedido do ServiceNow ao callback: a API registra, a fila entrega, o worker do domínio executa.",
+      map: {
+        nodes: [
+          { id: "entra",    t: "Entra ID",          s: "identidade do chamador",   c: 1, r: -1, k: "az" },
+          { id: "now",      t: "ServiceNow",        s: "ação de Flow",             c: 0, r: 0, k: "ext" },
+          { id: "apim",     t: "API Management",    s: "token, cota, rastreio",    c: 1, r: 0, k: "az" },
+          { id: "api",      t: "Hub API",           s: "catálogo e execuções",     c: 2, r: 0, k: "core" },
+          { id: "pg",       t: "PostgreSQL",        s: "execução e mensagens",     c: 3, r: 0, h: 2, k: "az" },
+          { id: "relay",    t: "Relay",             s: "do banco para a fila",     c: 4, r: 0, k: "core" },
+          { id: "notifier", t: "Notifier",          s: "callback e eventos",       c: 1, r: 1, k: "core" },
+          { id: "sb",       t: "Service Bus",       s: "uma fila por domínio",     c: 4, r: 1, k: "az" },
+          { id: "eh",       t: "Event Hubs",        s: "desfecho das execuções",   c: 1, r: 2, k: "az" },
+          { id: "target",   t: "Sistema alvo",      s: "Entra ID, SAP, outros",    c: 2, r: 2, k: "ext" },
+          { id: "worker",   t: "Worker do domínio", s: "roda a automação",         c: 3, r: 2, k: "core" },
+          { id: "kv",       t: "Key Vault",         s: "credenciais do domínio",   c: 3, r: 3, k: "az" }
+        ],
+        edges: [
+          { id: "now-apim",     a: "now",      b: "apim" },
+          { id: "apim-entra",   a: "apim",     b: "entra" },
+          { id: "apim-api",     a: "apim",     b: "api" },
+          { id: "api-pg",       a: "api",      b: "pg" },
+          { id: "pg-relay",     a: "pg",       b: "relay" },
+          { id: "relay-sb",     a: "relay",    b: "sb" },
+          { id: "sb-worker",    a: "sb",       b: "worker", bend: "vh" },
+          { id: "worker-pg",    a: "worker",   b: "pg", bi: true },
+          { id: "worker-kv",    a: "worker",   b: "kv" },
+          { id: "worker-target", a: "worker",  b: "target" },
+          { id: "pg-notifier",  a: "pg",       b: "notifier" },
+          { id: "notifier-now", a: "notifier", b: "now", bend: "hv" },
+          { id: "notifier-eh",  a: "notifier", b: "eh" }
+        ]
+      },
+      steps: [
+        { path: ["now", "apim"], t: "O ServiceNow chama pelo gateway", d: "Uma rota só para todas as ofertas, com cota e rastreio por consumidor." },
+        { path: ["apim", "entra"], t: "O token é conferido", d: "Cada chamador tem a própria identidade e só executa as automações liberadas para ele." },
+        { path: ["apim", "api", "pg"], t: "A API registra a execução e responde na hora", d: "Execução e mensagem são gravadas na mesma transação. A mesma chave de idempotência devolve a mesma execução." },
+        { path: ["pg", "relay", "sb"], t: "O relay leva a mensagem para a fila", d: "Uma fila por domínio. O que foi registrado no banco nunca fica sem envio." },
+        { path: ["sb", "worker"], t: "O worker do domínio assume", d: "Cada domínio tem os próprios workers, com a própria identidade. Mais carga, mais réplicas." },
+        { path: ["worker", "kv"], t: "A credencial vem do cofre", d: "O worker só lê os segredos do próprio domínio." },
+        { path: ["worker", "target"], t: "A automação age no sistema alvo", d: "Falha passageira repete com espera. Esgotadas as tentativas, a execução fica separada, com todo o contexto." },
+        { path: ["worker", "pg"], t: "O desfecho é gravado", d: "Tentativa, duração e resultado. O monitoramento recebe um registro e um rastro por tentativa, sem código na automação." },
+        { path: ["pg", "notifier", "now"], t: "O notifier avisa o ServiceNow", d: "O callback fecha o item ou o encaminha ao grupo solucionador, com o motivo." },
+        { path: ["notifier", "eh"], t: "O desfecho também vira evento", d: "Quem quiser acompanhar assina. Nada muda no Hub para um assinante novo." }
+      ] },
+
+    { id: "eh", label: "Now Event Hub", tag: "Now Event Hub",
+      title: "Um evento, por dentro",
+      lead: "Do registro que muda no ServiceNow ao assinante: publicado uma vez, entregue a quem assina.",
+      map: {
+        nodes: [
+          { id: "mcp",    t: "ServiceNow MCP",      s: "detalhe com permissão",    c: 4, r: -1, k: "core" },
+          { id: "now",    t: "ServiceNow",          s: "regra publicadora",        c: 0, r: 0, k: "ext" },
+          { id: "apim",   t: "API Management",      s: "token, cota, rastreio",    c: 1, r: 0, k: "az" },
+          { id: "ing",    t: "Ingestão",            s: "valida e deduplica",       c: 2, r: 0, k: "core" },
+          { id: "eh",     t: "Event Hubs",          s: "ordem por registro",       c: 3, r: 0, h: 3, k: "az",
+            ports: [{ r: 0, t: "Hub" }, { r: 1, t: "agentes" }, { r: 2, t: "outros" }] },
+          { id: "router", t: "Router do Hub",       s: "assinatura vira execução", c: 4, r: 0, k: "core" },
+          { id: "reg",    t: "Registro de eventos", s: "uma linha por tipo",       c: 0, r: 1, k: "ext" },
+          { id: "pg",     t: "PostgreSQL",          s: "eventos já aceitos",       c: 2, r: 1, k: "az" },
+          { id: "ag",     t: "Agentes",             s: "acionados por evento",     c: 4, r: 1, k: "core agent" },
+          { id: "others", t: "Stellar e outros",    s: "cada um no seu ritmo",     c: 4, r: 2, k: "ext" }
+        ],
+        edges: [
+          { id: "now-reg",    a: "now",    b: "reg" },
+          { id: "now-apim",   a: "now",    b: "apim" },
+          { id: "apim-ing",   a: "apim",   b: "ing" },
+          { id: "ing-pg",     a: "ing",    b: "pg" },
+          { id: "ing-eh",     a: "ing",    b: "eh" },
+          { id: "eh-router",  a: "eh",     b: "router" },
+          { id: "eh-ag",      a: "eh",     b: "ag" },
+          { id: "eh-others",  a: "eh",     b: "others" },
+          { id: "router-mcp", a: "router", b: "mcp" }
+        ]
+      },
+      steps: [
+        { path: ["now"], t: "Um registro muda no ServiceNow", d: "Criado, aprovado, atribuído: a mudança acontece como sempre." },
+        { path: ["now", "reg"], t: "A regra publicadora consulta o registro", d: "Só sai o que está no registro de eventos. Evento novo é uma linha, não uma regra nova." },
+        { path: ["now", "apim", "ing"], t: "O evento sai uma vez, só com identificadores", d: "Envelope padrão, pelo gateway. Nenhum dado pessoal sai do ServiceNow." },
+        { path: ["ing", "pg"], t: "A ingestão valida e deduplica", d: "Evento fora do contrato é recusado. Reenvio do mesmo evento não duplica." },
+        { path: ["ing", "eh"], t: "Publica com ordem por registro", d: "Tudo o que acontece com o mesmo ticket chega na ordem em que aconteceu." },
+        { path: ["eh", "router"], t: "O Hub é o primeiro assinante", d: "Uma assinatura liga o tipo de evento a uma automação e cria a execução." },
+        { path: ["router", "mcp"], t: "O detalhe vem pelas ferramentas", d: "Quem precisa de mais que o identificador busca pelo MCP, com a própria permissão." },
+        { path: ["eh", "ag"], t: "Os agentes leem o mesmo evento", d: "Cada assinante tem o próprio ponto de leitura: um não atrasa o outro." },
+        { path: ["eh", "others"], t: "Assinante novo não muda nada no ServiceNow", d: "E pode pedir o reenvio de uma janela de tempo, só para ele." }
+      ] },
+
+    { id: "mcp", label: "ServiceNow MCP", tag: "ServiceNow MCP",
+      title: "Uma chamada de ferramenta, por dentro",
+      lead: "Do cliente ao ServiceNow: a identidade de quem pede vai junto até o fim.",
+      map: {
+        nodes: [
+          { id: "entra",  t: "Entra ID",         s: "troca o token",           c: 2, r: -1, k: "az" },
+          { id: "client", t: "Clientes MCP",     s: "IDE, Stellar, agentes",   c: 0, r: 0, k: "ext" },
+          { id: "apim",   t: "API Management",   s: "token, cota, rastreio",   c: 1, r: 0, k: "az" },
+          { id: "mcp",    t: "ServiceNow MCP",   s: "semáforo e auditoria",    c: 2, r: 0, h: 3, k: "core",
+            ports: [{ r: 0, t: "leitura" }, { r: 1, t: "escrita" }, { r: 2, t: "automações" }] },
+          { id: "nowr",   t: "ServiceNow",       s: "ACLs de quem pede",       c: 3, r: 0, k: "ext" },
+          { id: "srest",  t: "Scripted REST",    s: "entrada única",           c: 3, r: 1, k: "ext" },
+          { id: "sub",    t: "Subflows do time", s: "um por ferramenta",       c: 4, r: 1, k: "ext" },
+          { id: "hub",    t: "Automation Hub",   s: "catálogo e execuções",    c: 3, r: 2, k: "core" },
+          { id: "pg",     t: "PostgreSQL",       s: "auditoria, só inserção",  c: 2, r: 3, k: "az" }
+        ],
+        edges: [
+          { id: "client-apim", a: "client", b: "apim" },
+          { id: "apim-mcp",    a: "apim",   b: "mcp" },
+          { id: "mcp-entra",   a: "mcp",    b: "entra" },
+          { id: "mcp-nowr",    a: "mcp",    b: "nowr" },
+          { id: "mcp-srest",   a: "mcp",    b: "srest" },
+          { id: "srest-sub",   a: "srest",  b: "sub" },
+          { id: "mcp-hub",     a: "mcp",    b: "hub" },
+          { id: "mcp-pg",      a: "mcp",    b: "pg" }
+        ]
+      },
+      steps: [
+        { path: ["client", "apim", "mcp"], t: "A chamada chega com o token de quem pede", d: "O gateway aplica cota e rastreio. O servidor não guarda sessão: cada chamada traz a própria identidade." },
+        { path: ["mcp", "entra"], t: "O token é trocado por um do ServiceNow", d: "Para a mesma pessoa. Sem usuário na sessão, vale a identidade de serviço do agente." },
+        { path: ["mcp"], t: "O semáforo decide antes de qualquer chamada", d: "Verde segue. Amarelo exige sub-produção e change request. Vermelho só abre pedido de aprovação." },
+        { path: ["mcp", "nowr"], t: "Leitura com as ACLs do usuário", d: "Ele só vê o que já veria no portal. Não há conta de serviço com acesso amplo." },
+        { path: ["mcp", "srest", "sub"], t: "Escrita só por subflow", d: "A Scripted REST aciona um subflow mantido pelo time do ServiceNow. O MCP não grava em tabela." },
+        { path: ["mcp", "hub"], t: "O catálogo do Hub pela mesma porta", d: "Listar automações, executar uma e acompanhar a execução." },
+        { path: ["mcp", "pg"], t: "Cada chamada fica auditada", d: "Quem pediu, qual ferramenta, a cor e o desfecho, em tabela que só aceita inserção." }
+      ] },
+
+    { id: "ag", label: "Agentes", tag: "Agentes",
+      title: "Uma execução de agente, por dentro",
+      lead: "Do evento ao pull request: limites conferidos a cada passo e uma pessoa que pode parar tudo.",
+      map: {
+        geo: { rp: 92 },
+        nodes: [
+          { id: "eh",     t: "Event Hubs",       s: "demanda, falha, prazo",    c: 0, r: 0, k: "az" },
+          { id: "ctl",    t: "Controle",         s: "cria, pausa e cancela",    c: 1, r: 0, k: "core" },
+          { id: "team",   t: "Time DW",          s: "pausa e aprova",           c: 1, r: 1, k: "person" },
+          { id: "pg",     t: "PostgreSQL",       s: "fila, passos e consumo",   c: 2, r: 0, k: "az" },
+          { id: "dd",     t: "Observabilidade",  s: "modelo, consumo e erro",   c: 2, r: 1, k: "ext" },
+          { id: "worker", t: "Worker do agente", s: "um por agente",            c: 3, r: 0, h: 4, k: "core agent",
+            ports: [{ r: 0, t: "modelo" }, { r: 1, t: "ferramentas" }, { r: 2, t: "execuções" }, { r: 3, t: "entrega" }] },
+          { id: "llm",    t: "Asimov",           s: "gateway de modelos",       c: 4, r: 0, k: "ext" },
+          { id: "mcp",    t: "ServiceNow MCP",   s: "lista fechada por agente", c: 4, r: 1, k: "core" },
+          { id: "hub",    t: "Automation Hub",   s: "non-prod e leitura",       c: 4, r: 2, k: "core" },
+          { id: "gh",     t: "Repositório",      s: "pull request",             c: 4, r: 3, k: "ext" }
+        ],
+        edges: [
+          { id: "eh-ctl",     a: "eh",     b: "ctl" },
+          { id: "team-ctl",   a: "team",   b: "ctl" },
+          { id: "ctl-pg",     a: "ctl",    b: "pg" },
+          { id: "pg-worker",  a: "pg",     b: "worker", bi: true },
+          { id: "worker-dd",  a: "worker", b: "dd" },
+          { id: "worker-llm", a: "worker", b: "llm" },
+          { id: "worker-mcp", a: "worker", b: "mcp" },
+          { id: "worker-hub", a: "worker", b: "hub" },
+          { id: "worker-gh",  a: "worker", b: "gh" }
+        ]
+      },
+      steps: [
+        { path: ["eh", "ctl"], t: "Um evento abre a execução", d: "Demanda criada, execução que falhou, prazo perto de estourar. Também dá para iniciar sob demanda." },
+        { path: ["ctl", "pg"], t: "A execução entra na fila do agente", d: "Com os limites de tempo, de custo e de iterações daquele agente." },
+        { path: ["pg", "worker"], t: "O worker do agente assume", d: "Um por agente, cada um com a própria identidade e a própria lista de ferramentas." },
+        { path: ["worker", "llm"], t: "O modelo vem do Asimov", d: "Antes de cada chamada, o worker confere a parada e os limites." },
+        { path: ["worker", "mcp"], t: "As ferramentas vêm do ServiceNow MCP", d: "Lista fechada por agente: o que não está na lista não existe para o modelo." },
+        { path: ["worker", "hub"], t: "E do catálogo do Hub", d: "O agente de QA executa em non-prod. O de Operação só lê as execuções." },
+        { path: ["worker", "gh"], t: "A entrega é escrita por ferramenta", d: "Pull request, comentário ou rascunho. Em modo sombra, a escrita fica só registrada." },
+        { path: ["worker", "dd"], t: "Cada passo deixa rastro", d: "Modelo, consumo e erro. O texto do pedido e a resposta do modelo não saem do processo." },
+        { path: ["team", "ctl"], t: "Uma pessoa pausa ou cancela a qualquer momento", d: "Vale já na próxima chamada de modelo ou de ferramenta." }
       ] }
   ],
 
@@ -208,4 +445,4 @@ window.DW = {
       items: ["Stellar no MCP e no catálogo", "Agentes Now Dev e Operação", "Expansão para todas as zonas", "Migração e desligamento do RPA legado"],
       gate: "Legado desligado e custo por execução acompanhado", news: { ag: "Now Dev e Operação", client: "Stellar conectado", eh: "incidente, tarefa e prazo", hub: "todas as zonas" }, works: ["s-nowdev", "s-triagem", "s-falha", "s-chat"] }
   ]
-};
+});
