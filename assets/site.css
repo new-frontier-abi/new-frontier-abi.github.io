@@ -177,6 +177,8 @@ td.was{color:var(--muted)} td.nb{white-space:nowrap}
 .rstep b{font-size:14.5px}
 .rstep p{font-size:14px;color:var(--muted)}
 .tagc{font:11.5px var(--mono);color:var(--muted);overflow-wrap:anywhere}
+.tagc i{display:block;margin-top:3px;font:700 10.5px var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--ink)}
+.tagc i:before{content:"";display:inline-block;width:7px;height:7px;margin-right:6px;background:var(--gold)}
 .cards{display:grid;gap:12px;grid-template-columns:repeat(3,minmax(0,1fr))}
 .cols.n6{grid-template-columns:repeat(3,minmax(0,1fr))}
 .card{border:1px solid var(--line);border-top:3px solid var(--ink);background:var(--card);padding:12px 14px 6px;display:grid;gap:8px;align-content:start}

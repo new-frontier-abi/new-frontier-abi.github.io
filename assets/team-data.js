@@ -78,32 +78,32 @@ window.TEAM = {
     ["dw-agents", "Runtime, agentes e avaliação"],
     ["dw-kairos", "Automações de interface, na Fase 4"]
   ],
-  /* [passo, pronto quando, repositório] */
+  /* [passo, pronto quando, repositório, já está em código (1)]. Em código: escrito e testado fora do ambiente; falta rodar nele. */
   base: [
     { phase: "Fase 0 · Base", when: "out–nov 2026", steps: [
-      ["Repositórios e esteira", "Um serviço de exemplo vai do pull request ao ambiente de dev sozinho", "todos"],
-      ["Ambiente de dev, pequeno, como código", "Um comando reproduz o ambiente do zero", "dw-platform-infra"],
+      ["Repositórios e esteira", "Um serviço de exemplo vai do pull request ao ambiente de dev sozinho", "todos", 1],
+      ["Ambiente de dev, pequeno, como código", "Um comando reproduz o ambiente do zero", "dw-platform-infra", 1],
       ["Identidade e gateway", "Uma chamada com token válido chega à API pelo gateway", "dw-platform-infra"]
     ] },
     { phase: "Fase 1 · Automation Hub", when: "dez 2026–fev 2027", steps: [
-      ["SDK e modelo de dados", "Uma automação de exemplo roda local, com sistemas simulados", "dw-automation-platform"],
-      ["Catálogo", "Publicar registra uma versão, e a API a devolve com o contrato", "dw-automation-platform"],
-      ["Execução", "Duas chamadas com a mesma chave devolvem a mesma execução", "dw-automation-platform"],
-      ["Confiabilidade", "Sistema alvo fora do ar termina em dead-letter, com histórico", "dw-automation-platform"],
+      ["SDK e modelo de dados", "Uma automação de exemplo roda local, com sistemas simulados", "dw-automation-platform", 1],
+      ["Catálogo", "Publicar registra uma versão, e a API a devolve com o contrato", "dw-automation-platform", 1],
+      ["Execução", "Duas chamadas com a mesma chave devolvem a mesma execução", "dw-automation-platform", 1],
+      ["Confiabilidade", "Sistema alvo fora do ar termina em dead-letter, com histórico", "dw-automation-platform", 1],
       ["O ServiceNow chama o Hub", "Uma oferta de sub-produção executa uma automação e recebe o desfecho", "dw-now-integration"],
       ["Primeiras 10 automações", "Em produção pelo Hub, com o legado delas desligado", "dw-automations"]
     ] },
     { phase: "Fase 2 · MCP e Event Hub", when: "mar–mai 2027", steps: [
-      ["MCP de leitura", "Dois usuários com permissões diferentes veem resultados diferentes", "dw-now-integration"],
-      ["Eventos", "Um evento vira execução sem código novo; reenvio não duplica", "dw-now-integration"],
-      ["Piloto de agentes", "Intake e ROI medidos em demandas reais, só com leitura", "dw-agents"]
+      ["MCP de leitura", "Dois usuários com permissões diferentes veem resultados diferentes", "dw-now-integration", 1],
+      ["Eventos", "Um evento vira execução sem código novo; reenvio não duplica", "dw-now-integration", 1],
+      ["Piloto de agentes", "Intake e ROI medidos em demandas reais, só com leitura", "dw-agents", 1]
     ] }
   ],
 
   /* ---------- 3 · Recursos: [item, quando] ---------- */
   resources: [
     ["Azure · dev, pequeno", [
-      ["Kubernetes: 1 nó de sistema e 1 a 3 de trabalho", "agora"],
+      ["Kubernetes pequeno: 2 a 3 nós", "agora"],
       ["PostgreSQL 16, camada básica", "agora"],
       ["Service Bus, camada Standard", "agora"],
       ["Cofre de segredos e armazenamento de arquivos", "agora"],

@@ -92,10 +92,10 @@
   function base() {
     var n = 0;
     view.innerHTML = head("2 · Base", "A base, passo a passo",
-        "Cada passo termina com algo que roda. Nenhum deles depende de um agente para começar.") +
+        "Cada passo termina com algo que roda. Nenhum deles depende de um agente para começar. Os marcados já estão em código, com teste: falta rodar no ambiente.") +
       "<div class='rail'><div class='rhead'><span></span><span>Passo</span><span>Pronto quando</span><span>Onde</span></div>" + T.base.map(function (g) {
         return "<section class='rsec'><header><b>" + esc(g.phase) + "</b><small>" + esc(g.when) + "</small></header>" + g.steps.map(function (s) {
-          return "<div class='rstep'><span class='n'>" + pad(++n) + "</span><b>" + esc(s[0]) + "</b><p>" + esc(s[1]) + "</p><span class='tagc'>" + esc(s[2]) + "</span></div>"; }).join("") + "</section>"; }).join("") + "</div>" +
+          return "<div class='rstep'><span class='n'>" + pad(++n) + "</span><b>" + esc(s[0]) + "</b><p>" + esc(s[1]) + "</p><span class='tagc'>" + esc(s[2]) + (s[3] ? "<i>em código</i>" : "") + "</span></div>"; }).join("") + "</section>"; }).join("") + "</div>" +
       "<div class='below'><div><h2>Seis repositórios</h2><p class='sub'>Cada peça no seu lugar. O pull request de um agente passa pelos mesmos gates de um pull request humano.</p></div><div class='cols n6'>" +
       T.repos.map(function (r) { return "<div class='col'><h3 class='mono'>" + esc(r[0]) + "</h3><p>" + esc(r[1]) + "</p></div>"; }).join("") + "</div></div>";
   }
