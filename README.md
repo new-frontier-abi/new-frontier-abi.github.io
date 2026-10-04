@@ -14,11 +14,16 @@ Publicado em <https://new-frontier-abi.github.io>. Página do time: <https://new
 | `assets/team-data.js` | Conteúdo da página do time |
 | `assets/map.js` | O mapa, desenhado em SVG a partir dos dados |
 | `assets/app.js`, `assets/team.js` | As telas e o Play de cada página |
-| `assets/site.css` | Tema, claro e escuro |
+| `assets/site.css` | Os dois temas: branco, o padrão, e escuro |
+| `assets/theme.js` | O botão do cabeçalho que troca o tema e guarda a escolha |
 
 ## Como editar
 
 O conteúdo fica só em `assets/data.js` e em `assets/team-data.js`. Não há build: abra `index.html` no navegador para conferir e faça o push para a `main`.
+
+O site abre no tema branco. O botão no canto do cabeçalho troca para o escuro, e a escolha vale para as duas páginas. Para abrir direto em um deles: `?tema=escuro` ou `?tema=claro` no endereço.
+
+Mudou o `site.css` ou o `theme.js`? Aumente o número em `?v=` nas duas páginas, para ninguém ficar com a versão antiga em cache.
 
 Regras do conteúdo:
 
