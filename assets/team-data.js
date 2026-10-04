@@ -69,9 +69,10 @@ window.TEAM = {
     ]
   },
 
-  /* ---------- 1 · Por dentro: o ambiente de dev e a esteira. Só tipo de serviço e papel. ---------- */
+  /* ---------- 1 · Por dentro: o ambiente de dev, a esteira e um domínio de automações. Só tipo de serviço e papel. ---------- */
+  envLegend: [["act", "Passo atual"], ["new", "Já percorrido"], ["core", "Serviço da plataforma"], ["az", "Serviço do Azure"], ["ext", "Código e entrega"], ["person", "Pessoa"]],
   env: {
-    id: "env", tag: "Ambiente e esteira",
+    id: "env", label: "Ambiente e esteira", tag: "Ambiente e esteira",
     title: "Do pull request ao cluster de dev",
     lead: "Código e ambiente entram pelo mesmo caminho: repositório, revisão e esteira. Nada é criado à mão.",
     map: {
@@ -105,6 +106,43 @@ window.TEAM = {
       { path: ["ci", "cd", "k8s"], t: "O deploy lê do repositório", d: "O que está no repositório é o que roda. Voltar atrás é reverter o commit." },
       { path: ["repo", "tf", "az"], t: "O ambiente também é código", d: "Um comando recria o dev do zero: cluster pequeno, banco, filas, cofre e identidades." },
       { path: ["az", "k8s"], t: "Cada serviço recebe só o que precisa", d: "Identidade própria, a fila do próprio domínio e os segredos do próprio cofre." }
+    ]
+  },
+  domain: {
+    id: "dom", label: "Um domínio, por dentro", tag: "Um domínio de automações",
+    title: "Cada domínio no seu espaço",
+    lead: "Imagem, filas, workers, identidade e segredos por domínio. Uma automação de um domínio não alcança o que é de outro.",
+    map: {
+      geo: { px: 30, py: 44, maxW: 940 },
+      nodes: [
+        { id: "code",    t: "Pasta do domínio",   s: "funções, manifestos, testes", c: 0, r: 0, k: "ext" },
+        { id: "catalog", t: "Catálogo do Hub",    s: "versões e contratos",         c: 0, r: 1, k: "core" },
+        { id: "image",   t: "Imagem do domínio",  s: "as automações juntas",        c: 1, r: 0, k: "ext" },
+        { id: "queue",   t: "Filas do domínio",   s: "rápida e longa",              c: 1, r: 1, k: "az" },
+        { id: "workers", t: "Workers do domínio", s: "identidade própria",          c: 2, r: 0, h: 2, k: "core",
+          ports: [{ r: 0, t: "código", side: "l" }, { r: 1, t: "execuções", side: "l" }] },
+        { id: "target",  t: "Sistema alvo",       s: "Entra ID, SAP, outros",       c: 3, r: 0, k: "ext" },
+        { id: "kv",      t: "Key Vault",          s: "segredos do domínio",         c: 3, r: 1, k: "az" }
+      ],
+      zones: [{ c0: 1, c1: 2, r0: 0, r1: 1, label: "UM DOMÍNIO: IDENTIDADE, WORKPLACE, SAP" }],
+      edges: [
+        { id: "code-image",     a: "code",    b: "image" },
+        { id: "image-workers",  a: "image",   b: "workers" },
+        { id: "code-catalog",   a: "code",    b: "catalog" },
+        { id: "catalog-queue",  a: "catalog", b: "queue" },
+        { id: "queue-workers",  a: "queue",   b: "workers" },
+        { id: "workers-target", a: "workers", b: "target" },
+        { id: "workers-kv",     a: "workers", b: "kv" }
+      ]
+    },
+    steps: [
+      { path: ["code", "image"], t: "Uma pasta por domínio vira uma imagem", d: "Cada automação é uma função Python com manifesto e testes. As do mesmo domínio viajam juntas." },
+      { path: ["image", "workers"], t: "A imagem roda nos workers do domínio", d: "Cada domínio tem o próprio espaço no cluster e a própria identidade." },
+      { path: ["code", "catalog"], t: "O manifesto vai para o catálogo", d: "A esteira publica cada versão: contrato de parâmetros, fila, limite de tempo e quem pode chamar." },
+      { path: ["catalog", "queue"], t: "Cada execução entra na fila do domínio", d: "Uma fila para o que é rápido, outra para o que demora. Um domínio lento não segura os outros." },
+      { path: ["queue", "workers"], t: "Só os workers do domínio leem essa fila", d: "Mais mensagens na fila, mais réplicas. Em dev, uma réplica basta." },
+      { path: ["workers", "kv"], t: "Os segredos são do domínio", d: "O worker lê só as credenciais do próprio domínio, pela identidade dele. Nada de senha em código." },
+      { path: ["workers", "target"], t: "A automação age no sistema alvo", d: "Com a credencial do domínio. O que acontece fica no log e no rastro, sem código na automação." }
     ]
   },
 

@@ -103,7 +103,7 @@
       g.appendChild(s);
       (n.ports || []).forEach(function (pt) {            /* rótulo de cada saída de um nó alto */
         var left = pt.side === "l";
-        g.appendChild(el("text", { "class": "pt", x: left ? b.x + 10 : b.x + b.w - 10, y: G.py + (pt.r - rMin) * G.rp + G.nh / 2 + 4, "text-anchor": left ? "start" : "end" }, pt.t));
+        g.appendChild(el("text", { "class": "pt", x: left ? b.x + (core ? 22 : 10) : b.x + b.w - 10, y: G.py + (pt.r - rMin) * G.rp + G.nh / 2 + 4, "text-anchor": left ? "start" : "end" }, pt.t));
       });
       if (/person/.test(n.k)) {
         var ic = el("g", { "class": "ico", transform: "translate(" + (b.x + b.w - 30) + "," + (b.y + 13) + ")" });

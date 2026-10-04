@@ -5,18 +5,18 @@
   var T = window.TEAM, U = window.DW.ui, esc = U.esc, view = U.view;
 
   /* ---------- 1 · Jornada: o mapa cresce a cada passo; embaixo, o ambiente e a esteira ---------- */
-  function jornada() {
-    var J = T.journey, E = T.env;
+  function jornada(arg) {
+    var J = T.journey, TECH = [T.env, T.domain];
     view.innerHTML = U.head("Um catálogo no centro. Todo o resto se conecta a ele.",
         "Primeiro as automações migram para o Hub. Depois entram os agentes, o ServiceNow, o Stellar e qualquer outro produto.") +
       "<div class='part' id='jr'>" + U.timeline(J.steps.map(function (s) { return { b: s.b, name: s.name, when: s.when }; })) +
       "<div class='work'>" + U.stage("play", U.legend([["new", "Entra neste passo"], ["core", "Construído pelo time"], ["ext", "Já existe"], ["ghost", "Ainda não conectado"]])) +
       "<aside class='side'><div class='panel'><h2>O que muda</h2><div class='pbody' id='st-items'></div></div>" +
       "<div class='panel'><h2>Pronto quando</h2><div class='pbody' id='st-gate'></div></div></aside></div></div>" +
-      "<div class='part' id='env'>" + U.sect("Técnico", "Por dentro: o ambiente de dev e a esteira",
+      "<div class='part' id='env'>" + U.sect("Técnico", "Por dentro: o ambiente de dev e as automações no Azure",
         "Um ambiente pequeno, descrito em código, para validar de ponta a ponta antes de crescer.") +
-      "<div class='work'>" + U.stage("play", U.legend([["act", "Passo atual"], ["new", "Já percorrido"], ["az", "Serviço do Azure"], ["ext", "Ferramenta de entrega"], ["person", "Pessoa"]])) +
-      "<aside class='side'>" + U.steps() + "</aside></div></div>";
+      U.seg([{ items: TECH.map(function (t) { return [t.id, t.label]; }) }], "Desenhos técnicos") +
+      "<div class='work'>" + U.stage("play", U.legend(T.envLegend)) + "<aside class='side'>" + U.steps() + "</aside></div></div>";
     function apply(k, map) {
       var S = J.steps[k];
       for (var n in map.nodes) {
@@ -36,7 +36,10 @@
       data: J, steps: J.steps, apply: apply, subOf: function (k) { return J.steps[k].text; }, primary: true,
       aria: "Jornada: das automações de hoje ao catálogo usado pelo ServiceNow, pelo Stellar e por outros produtos"
     });
-    U.Player(document.getElementById("env"), { scenarios: [E], tag: function (s) { return s.tag; } });
+    U.Player(document.getElementById("env"), {
+      scenarios: TECH, start: arg, tag: function (s) { return s.tag; }, onPick: function (id) { U.hash("jornada", id); }
+    });
+    if (arg && U.byId(TECH, arg)) document.getElementById("env").scrollIntoView();
   }
 
   /* ---------- 2 · Base ---------- */
