@@ -3,7 +3,7 @@
 (function () {
   "use strict";
   var NS = "http://www.w3.org/2000/svg";
-  var G = { nw: 186, nh: 64, cp: 226, rp: 114, px: 16, py: 30 };
+  var G0 = { nw: 186, nh: 64, cp: 226, rp: 114, px: 16, py: 30 };
   var uid = 0;
 
   function el(name, attrs, text) {
@@ -25,8 +25,10 @@
     return d + " L" + z[0] + " " + z[1];
   }
 
-  function DWMap(svg) {
-    var D = window.DW, id = "m" + (++uid), N = {}, E = {}, B = {}, run = 0;
+  /* data: conjunto { nodes, edges, zone, geo } a desenhar; sem ele, vale window.DW. geo ajusta a grade e a largura máxima. */
+  function DWMap(svg, data) {
+    var D = data || window.DW, id = "m" + (++uid), N = {}, E = {}, B = {}, run = 0, G = {}, k;
+    for (k in G0) G[k] = D.geo && D.geo[k] != null ? D.geo[k] : G0[k];
     var rMin = Math.min.apply(null, D.nodes.map(function (n) { return n.r; }));
     var cMax = Math.max.apply(null, D.nodes.map(function (n) { return n.c; }));
     var rMax = Math.max.apply(null, D.nodes.map(function (n) { return n.r + (n.h || 1) - 1; }));
@@ -54,6 +56,7 @@
 
     svg.setAttribute("viewBox", "0 0 " + W + " " + H);
     svg.setAttribute("class", "map");
+    svg.style.maxWidth = D.geo && D.geo.maxW ? D.geo.maxW + "px" : "";
     while (svg.firstChild) svg.removeChild(svg.firstChild);
 
     var defs = el("defs", {});
@@ -82,14 +85,15 @@
 
     D.nodes.forEach(function (n) {
       var b = B[n.id], core = /core/.test(n.k), pad = core ? 24 : 14, g = el("g", { "class": "nd " + n.k });
-      var ty = b.h > G.nh ? b.cy - 3 : b.y + 28;
+      var ty = b.h > G.nh ? (n.ports ? b.y + G.nh / 2 + G.rp / 2 - 3 : b.cy - 3) : b.y + 28;   /* nó alto com saídas: título entre a 1ª e a 2ª linha */
       g.appendChild(el("rect", { "class": "box", x: b.x, y: b.y, width: b.w, height: b.h, rx: 8 }));
       if (core) g.appendChild(el("rect", { "class": "acc", x: b.x + 10, y: b.y + 12, width: 4, height: b.h - 24, rx: 2 }));
       g.appendChild(el("text", { "class": "t", x: b.x + pad, y: ty }, n.t));
       var s = el("text", { "class": "s", x: b.x + pad, y: ty + 19 }, n.s);
       g.appendChild(s);
       (n.ports || []).forEach(function (pt) {            /* rótulo de cada saída de um nó alto */
-        g.appendChild(el("text", { "class": "pt", x: b.x + b.w - 10, y: G.py + (pt.r - rMin) * G.rp + G.nh / 2 + 4, "text-anchor": "end" }, pt.t));
+        var left = pt.side === "l";
+        g.appendChild(el("text", { "class": "pt", x: left ? b.x + 10 : b.x + b.w - 10, y: G.py + (pt.r - rMin) * G.rp + G.nh / 2 + 4, "text-anchor": left ? "start" : "end" }, pt.t));
       });
       if (/person/.test(n.k)) {
         var ic = el("g", { "class": "ico", transform: "translate(" + (b.x + b.w - 30) + "," + (b.y + 13) + ")" });
@@ -153,5 +157,5 @@
     return api;
   }
 
-  window.DW.Map = DWMap;
+  (window.DW = window.DW || {}).Map = DWMap;
 })();

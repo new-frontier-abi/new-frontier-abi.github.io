@@ -29,7 +29,23 @@
       var p = w.requestFullscreen(); if (p && p.catch) p.catch(function () {});
     });
   }
-  document.addEventListener("fullscreenchange", function () { var b = $("fs"); if (b) b.textContent = document.fullscreenElement ? "Sair da tela cheia" : "Tela cheia"; });
+  document.addEventListener("fullscreenchange", function () { var b = $("fs"); if (b) b.textContent = document.fullscreenElement ? "Sair da tela cheia" : "Tela cheia"; relock(); });
+  /* um bloco de texto que troca de conteúdo ocupa sempre a altura do maior: nada pula sob o cursor */
+  var locks = [];
+  function relock() { locks.forEach(function (f) { f(); }); }
+  function lock(el, htmls) {
+    function fit() {
+      var m = el.cloneNode(false), max = 0;
+      m.removeAttribute("id"); m.removeAttribute("aria-live");
+      m.style.cssText = "position:absolute;visibility:hidden;min-height:0;width:" + el.offsetWidth + "px";
+      el.parentNode.appendChild(m);
+      htmls.forEach(function (h) { m.innerHTML = h; if (m.offsetHeight > max) max = m.offsetHeight; });
+      el.parentNode.removeChild(m);
+      el.style.minHeight = max + "px";
+    }
+    locks.push(fit); fit();
+  }
+  window.addEventListener("resize", relock);
   var LEG = "<span><i class='l-core'></i>Peça da plataforma</span><span><i class='l-ext'></i>Já existe hoje</span><span><i class='l-person'></i>Pessoa</span>";
 
   /* ---------- 1 · A plataforma: passar o cursor acende a peça ou a ligação ---------- */
@@ -89,7 +105,10 @@
       var li = -1; D.links.forEach(function (l, i) { if (l.edges.indexOf(e) >= 0) li = i; });
       if (li >= 0) bind(map.edges[e].hit, function () { showLink(li); }, "l" + li);
     });
-    reset();
+    var all = [HINT];
+    D.links.forEach(function (l, i) { showLink(i); all.push(cap.innerHTML); });
+    Object.keys(map.nodes).forEach(function (n) { showNode(n); all.push(cap.innerHTML); });
+    reset(); lock(cap, all);
     live = { stop: function () {}, key: function (k) { if (k === "Escape") { pinned = null; reset(); return true; } return false; } };
   }
 
@@ -104,6 +123,11 @@
     var map = D.Map($("map")), cap = $("cap"), stepsEl = $("steps"), sc = null, i = -1, playing = false, token = 0;
     function pairs(path) { var out = []; for (var k = 0; k < path.length - 1; k++) out.push(map.between(path[k], path[k + 1])); return out; }
 
+    function capOf(k) {
+      var s = k >= 0 ? sc.steps[k] : null;
+      return s ? "<p class='k'>Passo " + (k + 1) + " de " + sc.steps.length + "</p><h3>" + esc(s.t) + "</h3><p>" + esc(s.d) + "</p>"
+        : "<p class='k'>" + sc.steps.length + " passos</p><h3>Aperte Play para ver o fluxo andar</h3><p class='hint'>Ou avance passo a passo, pelas setas do teclado ou clicando em um passo da lista.</p>";
+    }
     /* estado parado do passo i: o que já passou fica marcado, o passo atual fica em destaque */
     function paint(arriving) {
       var inN = {}, inE = {}, seenN = {}, seenE = {}, curE = {}, st = i >= 0 ? sc.steps[i] : null;
@@ -124,8 +148,7 @@
         else if (seenE[e]) map.edge(e, "seen", seenE[e]);
         else map.edge(e, "in", 0);
       }
-      cap.innerHTML = st ? "<p class='k'>Passo " + (i + 1) + " de " + sc.steps.length + "</p><h3>" + esc(st.t) + "</h3><p>" + esc(st.d) + "</p>"
-        : "<p class='k'>" + sc.steps.length + " passos</p><h3>Aperte Play para ver o fluxo andar</h3><p class='hint'>Ou avance passo a passo, pelas setas do teclado ou clicando em um passo da lista.</p>";
+      cap.innerHTML = capOf(i);
       Array.prototype.forEach.call(stepsEl.children, function (li, k) { li.className = k === i ? "cur" : k < i ? "past" : ""; });
       $("prev").disabled = i <= -1; $("next").disabled = i >= sc.steps.length - 1;
     }
@@ -172,6 +195,7 @@
       $("map").setAttribute("aria-label", sc.title);
       stepsEl.innerHTML = sc.steps.map(function (s, k) { return "<li data-k='" + k + "'><span class='n'>" + (k < 9 ? "0" : "") + (k + 1) + "</span><span>" + esc(s.t) + "</span></li>"; }).join("");
       map.idle(); paint(false);
+      locks = []; var all = [capOf(-1)]; sc.steps.forEach(function (s, k) { all.push(capOf(k)); }); lock(cap, all);
     }
     $("pick").addEventListener("click", function (ev) { var c = ev.target.closest(".chip"); if (c) load(c.getAttribute("data-s")); });
     stepsEl.addEventListener("click", function (ev) { var li = ev.target.closest("li"); if (li) { stop(); go(+li.getAttribute("data-k"), true); } });
@@ -258,18 +282,20 @@
       return true;
     } };
     set(D.phases.length - 1);
+    lock($("ph-goal"), D.phases.map(function (p) { return esc(p.goal); }));
   }
 
   /* ---------- navegação ---------- */
   var VIEWS = { plataforma: plataforma, autoatendimento: autoatendimento, agentes: agentes, fases: fases };
   function show(tab, arg) {
     if (!VIEWS[tab]) tab = "plataforma";
-    live.stop(); live = { stop: function () {}, key: null };
-    nav.innerHTML = TABS.map(function (t) { return "<button class='tab' data-tab='" + t[0] + "'" + (t[0] === tab ? " aria-current='page'" : "") + ">" + (t[1] ? "<i>" + t[1] + "</i>" : "") + esc(t[2]) + "</button>"; }).join("");
+    live.stop(); live = { stop: function () {}, key: null }; locks = [];
+    nav.innerHTML = TABS.map(function (t) { return "<button class='tab' data-tab='" + t[0] + "'" + (t[0] === tab ? " aria-current='page'" : "") + ">" + (t[1] ? "<i>" + t[1] + "</i>" : "") + esc(t[2]) + "</button>"; }).join("") +
+      "<a class='tab out' href='automacoes/'>Time de automações →</a>";
     VIEWS[tab](arg); fullscreen();
     try { history.replaceState(null, "", "#" + tab); } catch (e) {}
   }
-  nav.addEventListener("click", function (ev) { var b = ev.target.closest(".tab"); if (b) { show(b.getAttribute("data-tab")); window.scrollTo(0, 0); } });
+  nav.addEventListener("click", function (ev) { var b = ev.target.closest("[data-tab]"); if (b) { show(b.getAttribute("data-tab")); window.scrollTo(0, 0); } });
   view.addEventListener("click", function (ev) { var b = ev.target.closest("[data-go]"); if (b) { show(b.getAttribute("data-go"), b.getAttribute("data-arg")); window.scrollTo(0, 0); } });
   document.querySelector(".brand").addEventListener("click", function (ev) { ev.preventDefault(); show("plataforma"); });
   document.addEventListener("keydown", function (ev) {
