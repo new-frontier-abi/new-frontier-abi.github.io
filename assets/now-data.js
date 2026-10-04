@@ -24,14 +24,14 @@ window.NOW = {
     now:     { t: "ServiceNow",         k: "ext",    g: "s", d: "Catálogo, tickets e flows. A instância continua do time do ServiceNow." },
     entra:   { t: "Entra ID",           k: "az",     g: "b", d: "A identidade de cada chamador e a troca do token do usuário." },
     apim:    { t: "API|Management",     k: "az",     g: "b", d: "A porta de entrada: token, cota e rastreio de toda chamada que vem de fora do cluster." },
-    ing:     { t: "Ingestão|de eventos", k: "core",  g: "k", d: "Recebe os eventos do ServiceNow, valida o contrato e deduplica." },
+    ing:     { t: "Ingestão|de eventos", k: "core",  g: "k", d: "A entrada do Now Event Hub: recebe os eventos do ServiceNow, valida o contrato e deduplica." },
     agent:   { t: "Agente",             k: "core agent", g: "k", d: "Roda no cluster, com identidade própria, limites e uma lista fechada de ferramentas." },
     mcp:     { t: "ServiceNow|MCP",     k: "core",   g: "k", d: "O ServiceNow como ferramentas, com semáforo e auditoria. Não guarda sessão." },
     hub:     { t: "Automation|Hub",     k: "core",   g: "k", d: "Catálogo, execuções, assinaturas, agenda e callback." },
-    worker:  { t: "Worker do|domínio",  k: "core",   g: "k", d: "Executa as automações de um domínio, com identidade e fila próprias." },
+    worker:  { t: "Worker do|domínio",  k: "core",   g: "k", d: "Do Automation Hub: executa as automações de um domínio, com identidade e fila próprias." },
     pg:      { t: "PostgreSQL",         k: "az",     g: "d", d: "Execuções, eventos já aceitos, auditoria das ferramentas e estado dos agentes." },
-    sb:      { t: "Service Bus",        k: "az",     g: "d", d: "As filas de cada domínio de automação." },
-    eh:      { t: "Event Hubs",         k: "az",     g: "d", d: "Os eventos publicados. Cada assinante lê no próprio ritmo." },
+    sb:      { t: "Service Bus",        k: "az",     g: "d", d: "As filas do Automation Hub, separadas por domínio de automação." },
+    eh:      { t: "Event Hubs",         k: "az",     g: "d", d: "O barramento do Now Event Hub: cada assinante lê os eventos no próprio ritmo." },
     kv:      { t: "Key Vault",          k: "az",     g: "d", d: "As credenciais de cada domínio. Nada de senha em código." },
     llm:     { t: "Asimov",             k: "ext",    g: "x", d: "O gateway corporativo de modelos. Único caminho para um modelo de linguagem." },
     target:  { t: "Sistema alvo",       k: "ext",    g: "x", d: "Onde a automação age: Entra ID, SAP e os demais sistemas com API." },
@@ -264,7 +264,7 @@ window.NOW = {
           { p: 5, t: "Candidatos a problema, higiene do catálogo e saúde dos grupos", go: ["agentes", "operacao"] }] }
     ],
     steps: [
-      { b: "Hoje", name: "Ponto de partida", when: "",
+      { b: "Hoje", name: "Ponto de partida", when: "a base sai na Fase 0",
         title: "Hoje: cada etapa passa por alguém do time",
         text: "Pedidos de RH, de TI e de sistemas entram, são triados e atendidos à mão. O dia do time vai para o que se repete." },
       { b: "Fase 1", name: "Automation Hub", when: "dez 2026–fev 2027",
@@ -327,7 +327,7 @@ window.NOW = {
         caps: [{ p: 5, t: "Resumo do que mudou desde ontem, com os bloqueios primeiro", pieces: ["Hub", "MCP", "Asimov"], seq: "q-daily" }] }
     ],
     steps: [
-      { b: "Hoje", name: "Ponto de partida", when: "",
+      { b: "Hoje", name: "Ponto de partida", when: "a base sai na Fase 0",
         title: "Hoje: da demanda à promoção, tudo montado à mão",
         text: "Cada oferta, formulário, flow e integração é configurado item a item, e revisado e testado à mão." },
       { b: "Fase 1", name: "Automation Hub", when: "dez 2026–fev 2027",

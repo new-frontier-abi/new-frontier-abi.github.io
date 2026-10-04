@@ -71,7 +71,7 @@
   }
   function desenvolvimento(arg) {
     model("desenvolvimento", N.dev, arg, "Desenvolver no ServiceNow: menos montagem, mais revisão",
-      "Da demanda à promoção. Em cada etapa, o que deixa de ser feito à mão em cada fase. Quem decide e promove continua sendo o time.");
+      "Da demanda à promoção, etapa por etapa: o que deixa de ser montado à mão em cada fase. Quem decide e promove continua sendo o time.");
   }
 
   /* ---------- cartão do quadro: um artefato do ServiceNow ou da plataforma ---------- */
