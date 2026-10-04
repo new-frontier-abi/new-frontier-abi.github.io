@@ -30,9 +30,10 @@
   };
   /* legenda: [classe do quadradinho, texto] */
   U.legend = function (items) { return items.map(function (i) { return "<span><i class='l-" + i[0] + "'></i>" + esc(i[1]) + "</span>"; }).join(""); };
+  /* tabela: no telefone, cada linha vira um bloco, com o nome da coluna antes de cada valor (data-th) */
   U.table = function (cols, rows, cls) {
     return "<div class='tscroll'><table><thead><tr>" + cols.map(function (c) { return "<th>" + esc(c) + "</th>"; }).join("") + "</tr></thead><tbody>" +
-      rows.map(function (r) { return "<tr>" + r.map(function (c, i) { return "<td" + (cls && cls[i] ? " class='" + cls[i] + "'" : "") + ">" + (i === 0 ? "<b>" + esc(c) + "</b>" : esc(c)) + "</td>"; }).join("") + "</tr>"; }).join("") + "</tbody></table></div>";
+      rows.map(function (r) { return "<tr>" + r.map(function (c, i) { return "<td data-th='" + esc(cols[i]) + "'" + (cls && cls[i] ? " class='" + cls[i] + "'" : "") + ">" + (i === 0 ? "<b>" + esc(c) + "</b>" : esc(c)) + "</td>"; }).join("") + "</tr>"; }).join("") + "</tbody></table></div>";
   };
   U.cols = function (items, cls) { return "<div class='cols" + (cls ? " " + cls : "") + "'>" + items.map(function (c) { return "<div class='col'><h3>" + esc(c[0]) + "</h3><p>" + esc(c[1]) + "</p></div>"; }).join("") + "</div>"; };
 
@@ -109,6 +110,16 @@
     relock();
   });
 
+  /* quem aperta um controle vê o palco inteiro: se ele está cortado pela janela, a página rola o mínimo para mostrá-lo */
+  function calm() { return window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth"; }
+  function frame(work) {
+    if (document.fullscreenElement) return;
+    var r = work.querySelector(".stage").getBoundingClientRect(), vh = window.innerHeight, dy = 0;
+    if (r.top < 0) dy = r.top - 8;
+    else if (r.bottom > vh) dy = Math.min(r.bottom - vh + 8, r.top - 8);
+    if (Math.abs(dy) > 4) window.scrollBy({ top: dy, behavior: calm() });
+  }
+
   /* ---------- menu de troca: grupos de botões em uma linha. item: [id, rótulo, contagem] ---------- */
   U.seg = function (groups, label) {
     return "<div class='seg js-seg' role='group' aria-label='" + esc(label || "Exemplos") + "'>" + groups.map(function (g) {
@@ -180,7 +191,8 @@
   };
 
   /* ---------- controles do Play: iguais em todo palco que anda por passos ---------- */
-  /* core: { first, count(), index(), go(k, animate) → Promise<bool>, settle(), dwell(k): tempo de leitura, span(k): duração do passo inteiro } */
+  /* core: { first, count(), index(), go(k, animate) → Promise<bool>, settle(), dwell(k): tempo de leitura, span(k): duração do passo inteiro,
+             show(): põe o palco à vista; só quando a pessoa aperta um controle, nunca no meio do Play } */
   function Transport(work, core) {
     var playB = work.querySelector(".js-play"), prevB = work.querySelector(".js-prev"), nextB = work.querySelector(".js-next"), resetB = work.querySelector(".js-reset");
     var countEl = work.querySelector(".js-count"), prog = work.querySelector(".js-prog"), playing = false, token = 0, fs = fullscreen(work);
@@ -202,11 +214,11 @@
     }
     function pause() { if (playing) { playing = false; token++; } refresh(false); }
     /* o contador e a barra andam no começo do passo; o fim da animação só confirma */
-    function jump(k, animate) { pause(); var my = token, going = core.go(k, animate); refresh(false); return going.then(function (ok) { if (my === token) refresh(false); return ok; }); }
+    function jump(k, animate) { pause(); var my = token, going = core.go(k, animate); refresh(false); core.show(); return going.then(function (ok) { if (my === token) refresh(false); return ok; }); }
     function play() {
       if (playing) { pause(); core.settle(); return; }
       playing = true; var my = ++token;
-      label();
+      label(); core.show();
       (function loop(k) {
         var last = k >= core.count() - 1, going = core.go(k, true);
         refresh(!last);   /* a barra do passo enche enquanto ele dura: o caminho e o tempo de leitura */
@@ -295,14 +307,14 @@
     }
     /* o que está em destaque fica à vista: o cartão do passo, na página; o nó do passo, no mapa que rola de lado */
     function reveal() {
-      var smooth = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth";
+      var smooth = calm();
       if (board) {
         var c = i >= 0 && board.querySelector(".ac[data-id='" + sc.steps[i].on[0] + "']"); if (!c) return;   /* o primeiro cartão do passo é o principal */
         var full = document.fullscreenElement && document.fullscreenElement.contains(board);   /* em tela cheia, quem rola é o quadro */
-        var r = c.getBoundingClientRect(), frame = board.getBoundingClientRect(), head = work.querySelector(".stage-head").getBoundingClientRect();
-        var edge = (full ? frame.top : head.bottom) + 12;      /* acima disto, o cartão está escondido */
-        var stuck = (full ? frame.top : head.height) + 12;     /* até onde o cartão pode subir: o texto do passo fica preso no topo */
-        var bottom = (full ? frame.bottom : window.innerHeight) - 14, dy = 0;
+        var r = c.getBoundingClientRect(), area = board.getBoundingClientRect(), head = work.querySelector(".stage-head").getBoundingClientRect();
+        var edge = (full ? area.top : head.bottom) + 12;      /* acima disto, o cartão está escondido */
+        var stuck = (full ? area.top : head.height) + 12;     /* até onde o cartão pode subir: o texto do passo fica preso no topo */
+        var bottom = (full ? area.bottom : window.innerHeight) - 14, dy = 0;
         if (r.top < edge) dy = r.top - edge;
         else if (r.bottom > bottom) dy = Math.max(0, Math.min(r.bottom - bottom, r.top - stuck));   /* desce sem esconder o começo do cartão */
         if (dy) (full ? board : window).scrollBy({ top: dy, behavior: smooth });
@@ -343,7 +355,8 @@
       settle: function () { run++; if (map) map.stop(); paint(false); },
       /* tempo de leitura de cada passo: cresce com o tamanho do texto */
       dwell: function (k) { var s = sc.steps[k]; return Math.max(2200, Math.min(5200, 1400 + 32 * ((s.t + (s.d || "")).length))); },
-      span: function (k) { var s = sc.steps[k], hops = s.path ? s.path.length - 1 : 0; return (board || !s.path ? 380 : hops ? hops * 720 : 500) + core.dwell(k); }
+      span: function (k) { var s = sc.steps[k], hops = s.path ? s.path.length - 1 : 0; return (board || !s.path ? 380 : hops ? hops * 720 : 500) + core.dwell(k); },
+      show: function () { if (!board) frame(work); }   /* no quadro, quem fica à vista é o cartão do passo */
     };
     function load(id) {
       if (transport) transport.pause();
@@ -388,7 +401,8 @@
     }
     var core = {
       first: 0, count: function () { return o.steps.length; }, index: function () { return cur; }, settle: function () {},
-      go: function (k) { set(k); return Promise.resolve(true); }, dwell: function () { return 3000; }, span: function () { return 3000; }
+      go: function (k) { set(k); return Promise.resolve(true); }, dwell: function () { return 3000; }, span: function () { return 3000; },
+      show: function () { frame(work); }
     };
     set(o.start != null ? o.start : o.steps.length - 1);
     var transport = Transport(work, core);

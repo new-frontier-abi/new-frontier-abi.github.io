@@ -387,5 +387,15 @@ td.was{color:var(--muted)} td.nb{white-space:nowrap}
     linear-gradient(to right,rgba(10,10,10,.22),transparent) left center/12px 100% no-repeat scroll,
     linear-gradient(to left,rgba(10,10,10,.22),transparent) right center/12px 100% no-repeat scroll,var(--surface)}
 }
-@media (max-width:640px){ .cards,.cols.n6{grid-template-columns:minmax(0,1fr)} }
+@media (max-width:640px){
+  .cards,.cols.n6{grid-template-columns:minmax(0,1fr)}
+  /* tabela vira lista: uma linha por bloco, o nome da coluna antes de cada valor */
+  .tscroll table,.tscroll tbody,.tscroll tr,.tscroll td{display:block}
+  .tscroll thead{display:none}
+  .tscroll tr{padding:11px 12px;border-bottom:1px solid var(--faint)}
+  .tscroll tr:last-child{border-bottom:0}
+  .tscroll td{padding:0;border:0;white-space:normal}
+  .tscroll td:not(:first-child){margin-top:6px}
+  .tscroll td:not(:first-child):before{content:attr(data-th);display:block;font:700 10px var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+}
 @media (max-width:520px){ .tl-b span{display:none} .tl-b b{letter-spacing:.04em} .ctl{width:100%} .btn.pri{flex:1} }
