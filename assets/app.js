@@ -36,7 +36,7 @@
       player.load(b.getAttribute("data-more")); U.hash("plataforma", b.getAttribute("data-more"));
       tech.scrollIntoView({ behavior: "smooth", block: "start" });
     });
-    if (arg && U.byId(D.tech, arg)) tech.scrollIntoView();
+    if (arg && U.byId(D.tech, arg)) U.aim(tech);
   }
 
   /* ---------- 2 e 3 · fluxos sobre o mapa executivo: o mapa se monta à medida que o fluxo avança ---------- */

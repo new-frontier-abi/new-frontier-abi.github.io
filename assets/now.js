@@ -114,7 +114,7 @@
       "<p class='aside'><b>Por dentro.</b> O desenho técnico de uma execução de agente no Azure está na página da <a href='../#plataforma/ag'>plataforma</a>.</p></div>";
     U.Functions(document.getElementById("fn"), tema || "");
     U.Flows("fl", AGENTS, D.scenarios, { start: tema != null ? null : arg, primary: true, onPick: function (id) { U.hash("agentes", id); } });
-    if (tema != null) document.getElementById("catalogo").scrollIntoView();
+    if (tema != null) U.aim(document.getElementById("catalogo"));
   }
 
   /* ---------- 5 · Garantias ---------- */

@@ -39,7 +39,7 @@
     U.Player(document.getElementById("env"), {
       scenarios: TECH, start: arg, unit: "desenho", tag: function (s) { return s.tag; }, onPick: function (id) { U.hash("jornada", id); }
     });
-    if (arg && U.byId(TECH, arg)) document.getElementById("env").scrollIntoView();
+    if (arg && U.byId(TECH, arg)) U.aim(document.getElementById("env"));
   }
 
   /* ---------- 2 · Base ---------- */
@@ -100,7 +100,7 @@
       U.sect(null, "O que todo agente tem") + U.cols(T.controls) + "</div>";
     U.Functions(document.getElementById("fn"), "agente");
     U.Flows("fl", AGENTS, D.scenarios, { start: arg, primary: true, onPick: function (id) { U.hash("agentes", id); } });
-    if (arg === "funcoes") document.getElementById("funcoes").scrollIntoView();   /* #agentes/funcoes abre direto na lista das funções */
+    if (arg === "funcoes") U.aim(document.getElementById("funcoes"));   /* #agentes/funcoes abre direto na lista das funções */
   }
 
   U.shell({

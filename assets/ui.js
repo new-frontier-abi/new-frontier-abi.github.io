@@ -592,21 +592,25 @@
     /* a altura do cabeçalho, para o que fica preso logo abaixo dele */
     var top = document.querySelector(".top");
     function measure() { document.documentElement.style.setProperty("--top", (top && window.getComputedStyle(top).position === "sticky" ? top.offsetHeight : 0) + "px"); }
+    var shown = null, aim = null;   /* o exemplo que o endereço aponta agora; o trecho da tela a que o endereço leva */
+    U.aim = function (el) { aim = el; };
     function show(tab, arg, o) {
       o = o || {};
       if (!cfg.views[tab]) { tab = cfg.tabs[0][0]; arg = null; }
-      stopAll();
+      stopAll(); aim = null;
+      if (!o.keep) window.scrollTo(0, 0);
       nav.innerHTML = cfg.tabs.map(function (t, k) { return "<button class='tab' type='button' data-tab='" + t[0] + "'" + (t[0] === tab ? " aria-current='page'" : "") + "><i>" + (k + 1) + "</i>" + esc(t[1]) + "</button>"; }).join("");
       measure();   /* os palcos medem a tela ao nascer */
       view.style.minHeight = ""; building = true;
       try { cfg.views[tab](arg); } finally { building = false; }
       view.insertAdjacentHTML("beforeend", pager(tab));
       var at = "#" + tab + (arg ? "/" + arg : "");
+      shown = arg || null;
       try { if (o.push && location.hash !== at) history.pushState(null, "", at); else history.replaceState(null, "", at); } catch (e) { /* o endereço fica como está */ }
       measure();
-      if (!o.keep) window.scrollTo(0, 0);
+      if (aim) aim.scrollIntoView();   /* com a tela inteira montada: o trecho pedido fica logo abaixo do cabeçalho */
     }
-    U.hash = function (tab, arg) { try { history.replaceState(null, "", "#" + tab + (arg ? "/" + arg : "")); } catch (e) { /* o endereço fica como está */ } };
+    U.hash = function (tab, arg) { shown = arg || null; try { history.replaceState(null, "", "#" + tab + (arg ? "/" + arg : "")); } catch (e) { /* o endereço fica como está */ } };
     function fromHash() { var h = (location.hash || "").replace("#", "").split("/"); return [h[0], h[1] || null]; }
     function current() { var t = nav.querySelector("[aria-current]"); return t && t.getAttribute("data-tab"); }
     nav.addEventListener("click", function (ev) { var b = ev.target.closest("[data-tab]"); if (b) show(b.getAttribute("data-tab"), null, { push: true }); });
@@ -620,8 +624,8 @@
       var order = listeners();
       for (var k = 0; k < order.length; k++) if (order[k].key && order[k].key(ev.key)) { ev.preventDefault(); return; }
     });
-    /* voltar e avançar do navegador, ou um endereço digitado: só troca de tela quando a seção muda */
-    window.addEventListener("hashchange", function () { var h = fromHash(); if (cfg.views[h[0]] && h[0] !== current()) show(h[0], h[1]); });
+    /* voltar e avançar do navegador, um favorito ou um endereço digitado: a tela muda quando a seção ou o exemplo do endereço mudam */
+    window.addEventListener("hashchange", function () { var h = fromHash(); if (cfg.views[h[0]] && (h[0] !== current() || h[1] !== shown)) show(h[0], h[1]); });
     window.addEventListener("resize", measure);
     /* a primeira tela espera a fonte: os desenhos medem o texto para quebrar as linhas */
     function start() { var h = fromHash(); show(h[0], h[1], { keep: true }); }
