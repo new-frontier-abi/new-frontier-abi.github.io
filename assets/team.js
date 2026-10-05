@@ -4,13 +4,13 @@
   "use strict";
   var T = window.TEAM, D = window.DW, U = D.ui, esc = U.esc, view = U.view;
 
-  /* ---------- 1 · Jornada: o mapa cresce a cada passo, e cada peça só aparece quando chega a vez dela; embaixo, o ambiente e a esteira ---------- */
+  /* ---------- 1 · Jornada: o mapa cresce a cada passo; o que ainda não chegou fica só no contorno. Embaixo, o ambiente e a esteira ---------- */
   function jornada(arg) {
     var J = T.journey, TECH = [T.env, T.domain];
     view.innerHTML = U.head("Um catálogo no centro. Todo o resto se conecta a ele.",
         "Primeiro as automações migram para o Hub. Depois entram os agentes, o ServiceNow, o Stellar e qualquer outro produto.") +
       "<div class='part' id='jr'>" + U.timeline(J.steps.map(function (s) { return { b: s.b, name: s.name, when: s.when }; })) +
-      "<div class='work'>" + U.stage("play", U.legend([["new", "Entra neste passo"], ["core", "Construído pelo time"], ["ext", "Já existe"], ["ghost", "Desligado"]])) +
+      "<div class='work'>" + U.stage("play", U.legend([["new", "Entra neste passo"], ["core", "Construído pelo time"], ["ext", "Já existe"], ["ghost", "Ainda não conectado"]])) +
       "<aside class='side'><div class='panel'><h2>O que muda</h2><div class='pbody' id='st-items'></div></div>" +
       "<div class='panel'><h2>Pronto quando</h2><div class='pbody' id='st-gate'></div></div></aside></div></div>" +
       "<div class='part' id='env'>" + U.sect("Técnico", "Por dentro: o ambiente de dev e as automações no Azure",
@@ -19,14 +19,14 @@
       "<div class='work'>" + U.stage("play", U.legend(T.envLegend)) + "<aside class='side'>" + U.steps() + "</aside></div></div>";
     function apply(k, map) {
       var S = J.steps[k];
-      for (var n in map.nodes) {   /* o que ainda não chegou não aparece; o que foi desligado fica só no contorno */
-        var d = map.nodes[n].def, later = d.p > k, gone = S.ghost && S.ghost.indexOf(n) >= 0, sub = S.subs && S.subs[n];
+      for (var n in map.nodes) {   /* o que ainda não chegou, ou já foi desligado, fica só no contorno */
+        var d = map.nodes[n].def, gh = d.p > k || (S.ghost && S.ghost.indexOf(n) >= 0), sub = S.subs && S.subs[n];
         map.sub(n, sub || null);
-        map.node(n, later ? "hid" : gone ? "ghost" : d.p === k ? "new" : "", sub && !later && !gone ? "swap" : "");
+        map.node(n, gh ? "ghost" : d.p === k ? "new" : "", sub && !gh ? "swap" : "");
       }
       for (var e in map.edges) {
-        var x = map.edges[e].def, off = x.p > k || (x.until != null && k > x.until);
-        map.edge(e, off ? "hid" : x.p === k ? "new" : "seen", off ? 0 : map.natural(e));
+        var x = map.edges[e].def, hidden = x.p > k || (x.until != null && k > x.until);
+        map.edge(e, hidden ? "ghost" : x.p === k ? "new" : "seen", hidden ? 0 : map.natural(e));
       }
       document.getElementById("st-items").innerHTML = "<ul>" + S.items.map(function (x) { return "<li>" + esc(x) + "</li>"; }).join("") + "</ul>";
       document.getElementById("st-gate").innerHTML = S.gate ? "<div class='gate'>" + esc(S.gate) + "</div>" : "<p class='mut'>É o ponto de partida.</p>";

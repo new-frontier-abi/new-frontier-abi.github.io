@@ -1,5 +1,5 @@
 /* Mapa da plataforma: desenha nós e ligações em SVG e expõe o que as telas precisam
-   (estado de nó, estado de ligação, segunda linha do nó, ponto que percorre uma ligação, zonas que aparecem e crescem aos poucos). */
+   (estado de nó, estado de ligação, segunda linha do nó, ponto que percorre uma ligação, zonas). */
 (function () {
   "use strict";
   var NS = "http://www.w3.org/2000/svg";
@@ -170,11 +170,6 @@
         svg.style.maxWidth = Math.round((x1 - x0) * 1.15) + "px";   /* o texto nunca fica muito maior que no mapa inteiro */
         svg.style.minWidth = Math.min(780, Math.round(x1 - x0)) + "px";
       },
-      /* cada zona abraça só os nós que já apareceram dentro dela, e some enquanto não há nenhum: a zona cresce com o desenho */
-      hug: function () {
-        var up = Object.keys(N).filter(function (n) { return !N[n].hid; });
-        Z.forEach(function (z, k) { api.zone(k, !!wrap(z, up)); });
-      },
       /* segunda linha do nó; sem texto, volta ao padrão */
       sub: function (nid, text) { N[nid].s.textContent = text || N[nid].def.s; },
       /* ligação entre dois nós e o sentido em que foi pedida */
@@ -191,12 +186,15 @@
       },
       stop: function () { run++; token.style.display = "none"; },
       pulse: function (nid) { var g = N[nid].g; g.classList.remove("pulse"); void g.getBoundingClientRect(); g.classList.add("pulse"); },
-      /* o ponto percorre a ligação, e a linha se desenha atrás dele; resolve true se chegou, false se foi interrompido */
-      travel: function (eid, dir, ms) {
+      /* o ponto percorre a ligação; resolve true se chegou, false se foi interrompido.
+         draw: a ligação ainda não está à vista, e a linha se desenha atrás do ponto. */
+      travel: function (eid, dir, ms, draw) {
         var p = E[eid].p, L = p.getTotalLength(), my = ++run, t0 = null;
         if (still()) ms = 1;
-        p.setAttribute("class", "ed draw"); p.removeAttribute("marker-end"); p.removeAttribute("marker-start");
-        p.style.strokeDasharray = L + " " + L; p.style.strokeDashoffset = (dir > 0 ? L : -L);
+        if (draw) {
+          p.setAttribute("class", "ed draw"); p.removeAttribute("marker-end"); p.removeAttribute("marker-start");
+          p.style.strokeDasharray = L + " " + L; p.style.strokeDashoffset = (dir > 0 ? L : -L);
+        }
         token.style.display = "";
         return new Promise(function (done) {
           function frame(ts) {
@@ -205,7 +203,7 @@
             var k = Math.min(1, (ts - t0) / ms), q = k < 0.5 ? 2 * k * k : 1 - Math.pow(-2 * k + 2, 2) / 2;
             var pt = p.getPointAtLength((dir > 0 ? q : 1 - q) * L);
             token.setAttribute("cx", pt.x); token.setAttribute("cy", pt.y);
-            p.style.strokeDashoffset = (dir > 0 ? 1 : -1) * L * (1 - q);
+            if (draw) p.style.strokeDashoffset = (dir > 0 ? 1 : -1) * L * (1 - q);
             if (k < 1) requestAnimationFrame(frame); else { token.style.display = "none"; done(true); }
           }
           requestAnimationFrame(frame);

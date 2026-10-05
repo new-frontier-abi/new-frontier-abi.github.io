@@ -118,7 +118,7 @@ window.DW = Object.assign(window.DW || {}, {
   notAgent: "Executar a automação e calcular o retorno são código, com teste. Aprovar pull request, promover para produção e conceder acesso são sempre de uma pessoa.",
 
   /* ---------- fluxos: path percorre ligações do mapa; sub troca a segunda linha de um nó (no fluxo inteiro ou só naquele passo).
-     Nas telas, o mapa não vem pronto: cada peça aparece quando o passo chega nela. ---------- */
+     Nas telas, o mapa aparece inteiro: o que o fluxo não usa fica apagado, e o caminho acende passo a passo. ---------- */
   acts: {
     autoatendimento: [{ name: null, ids: ["s-pedido", "s-evento", "s-mcp"] }],
     agentes: [

@@ -10,7 +10,7 @@ Publicado em <https://new-frontier-abi.github.io>.
 | [Automações](https://new-frontier-abi.github.io/automacoes/) | O time que constrói e opera | A jornada, o ambiente e a esteira, a base passo a passo, os recursos, os times e os agentes |
 | [ServiceNow](https://new-frontier-abi.github.io/servicenow/) | O time do ServiceNow | Os fluxos de operação e de desenvolvimento, cada um com o desenho no Azure; os exemplos; os agentes; as garantias |
 
-Tudo o que acontece é contado como um fluxo: um caminho sobre o mapa da plataforma, passo a passo. O mapa não vem pronto: cada peça aparece quando o fluxo chega nela. Nas duas linhas do tempo, a jornada e as fases, vale o mesmo: cada peça entra no passo ou na fase dela. O desenho técnico fica logo abaixo. Na página do ServiceNow, ele é um desenho em raias: uma linha por etapa, uma coluna por participante, com os serviços do Azure dentro de uma zona.
+Tudo o que acontece é contado como um fluxo: um caminho sobre o mapa da plataforma, passo a passo. O mapa aparece inteiro desde o começo: o que o fluxo não usa fica apagado, e o caminho acende a cada passo. Nas duas linhas do tempo, a jornada e as fases, o que ainda não chegou aparece só no contorno. O desenho técnico fica logo abaixo. Na página do ServiceNow, ele é um desenho em raias: uma linha por etapa, uma coluna por participante, com os serviços do Azure dentro de uma zona.
 
 ## O que tem aqui
 
@@ -52,11 +52,11 @@ A identidade vem do logo do Digital Workplace: preto e amarelo, traço único, n
 O conteúdo fica só nos três arquivos de dados. Não há build: abra `index.html` no navegador para conferir e faça o push para a `main`.
 
 - **Mapa**: cada nó tem coluna (`c`) e linha (`r`) em uma grade; `h` é a altura em linhas. Uma ligação anda em linha reta entre nós da mesma linha ou coluna; `bend: "hv"` ou `"vh"` faz um L; `step` desce em degrau até a coluna ao lado.
-- **Fluxo**: cada passo tem `path`, a sequência de nós por onde o ponto anda. Só vale passar por ligações que existem. `sub` troca a segunda linha de um nó, no fluxo inteiro ou só em um passo. `phase` é a fase em que o fluxo passa a funcionar; `5` é proposta, e pede `note`.
+- **Fluxo**: cada passo tem `path`, a sequência de nós por onde o ponto anda. Só vale passar por ligações que existem. `sub` troca a segunda linha de um nó, no fluxo inteiro ou só em um passo. `phase` é a fase em que o fluxo passa a funcionar; `5` é proposta, e pede `note`. Opcional: `build: true` faz o mapa daquele fluxo se montar passo a passo, só com as peças que ele usa.
 - **Fluxo de agente**: um por agente, em `assets/data.js`, do que o aciona ao que uma pessoa decide. As três páginas mostram os mesmos.
 - **Fluxo do time do ServiceNow**: em `assets/now-data.js`, sobre o mesmo mapa. `run` e `dev` dizem quais fluxos entram em cada tela e trazem a tabela do que muda para o time. `tech` liga cada fluxo ao processo em raias; `board`, ao exemplo.
 - **Desenho técnico**: igual a um fluxo, com o próprio mapa em `map`, que aparece inteiro. Um passo com `on` acende um conjunto de nós em vez de andar.
-- **Linha do tempo** (jornada e fases): `p` diz em que passo, ou fase, o nó e a ligação passam a existir; antes disso, não aparecem. Na jornada, `ghost` deixa só o contorno do que foi desligado.
+- **Linha do tempo** (jornada e fases): `p` diz em que passo, ou fase, o nó e a ligação passam a existir; antes disso, o nó aparece só no contorno. Na jornada, `ghost` devolve ao contorno o que foi desligado.
 - **Processo em raias**: quem participa (`seq.parts`, tirado de `parts`) e as etapas. Cada etapa tem os trechos que percorre (`hops`: de, para e um rótulo curto). A camada de cada participante (`g`) decide se ele fica dentro da zona do Azure.
 - **Exemplo do ServiceNow**: um quadro de cartões (`cards`) e os passos que acendem cada cartão (`on`; o primeiro é o que fica à vista). `flow` diz qual fluxo conta a história dele.
 

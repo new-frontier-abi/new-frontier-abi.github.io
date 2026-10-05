@@ -276,7 +276,7 @@
 
   /* ---------- exemplos: passos que andam sobre um mapa, sobre um desenho em raias ou sobre um quadro de cartões ---------- */
   /* o: { scenarios, data (mapa padrão), lib (participantes das raias), start, tag(sc), card(c) para o quadro, onPick(id), unit (o nome de um exemplo, para o botão),
-          build: o mapa não vem pronto; cada peça aparece quando o passo chega nela (um exemplo pode dizer build: false) }
+          build: opcional; o mapa não vem pronto, e cada peça aparece quando o passo chega nela (vale para todos, ou para o exemplo que disser build: true) }
      O aviso de proposta (sc.note) e os atalhos (sc.more, sc.down) ficam ao lado da lista de passos; sem lista, vão no texto do exemplo parado.
      passo no mapa: path (anda pelas ligações) ou on (acende um conjunto de nós); nas raias (sc.seq): hops, os trechos da etapa;
      no quadro: on (cartões; o primeiro é o que fica à vista). sc.focus: só o conjunto do passo atual fica aceso.
@@ -307,12 +307,13 @@
       var stage = work.querySelector(".stage"), box0 = stage.getBoundingClientRect(), head = parseFloat(window.getComputedStyle(document.documentElement).getPropertyValue("--top")) || 0;
       var top = box0.top + window.scrollY, rest = box0.height - real.getBoundingClientRect().height;   /* onde o palco começa na página e quanto dele não é desenho */
       var room = window.innerHeight - (top <= window.innerHeight * 0.4 ? top : head + 12) - rest - 16;
-      var probe = real.cloneNode(false), tall = 0;
+      var probe = real.cloneNode(false), tall = 0, whole = false;
       probe.removeAttribute("id"); probe.style.minHeight = "";
       real.parentNode.insertBefore(probe, real); real.style.display = "none";
       o.scenarios.forEach(function (s) {
         if (board) probe.innerHTML = s.cards.map(o.card).join("");
         else if (s.seq) return;
+        else if (!s.map && !builds(s)) { if (whole) return; whole = true; DW.Map(probe, o.data); }   /* o mapa da plataforma inteiro é o mesmo em todos os fluxos: mede uma vez */
         else { var m = DW.Map(probe, s.map || o.data); if (builds(s)) frame(m, s); }
         tall = Math.max(tall, probe.getBoundingClientRect().height);
       });
@@ -321,7 +322,7 @@
       if (tall > 0) real.style.minHeight = tall + "px";
     }
 
-    /* estado parado do passo i: o que já passou fica marcado, o passo atual fica em destaque.
+    /* estado parado do passo i: o mapa inteiro fica à vista; o que o exemplo não usa fica apagado, o que já passou fica marcado e o passo atual fica em destaque.
        Em um mapa que se monta (build), só existe o que os passos até aqui já tocaram; antes do primeiro, só o ponto de partida. */
     function paintMap(arriving) {
       var inN = {}, inE = {}, seenN = {}, seenE = {}, curE = {}, actN = {}, upN = {}, st = i >= 0 ? sc.steps[i] : null;
@@ -423,7 +424,8 @@
       ps.forEach(function (p, j) {
         chain = chain.then(function (ok) {
           if (!ok || my !== run) return false;
-          return map.travel(p.id, p.dir, 720).then(function (done) {
+          if (!build) map.edge(p.id, "cur", p.dir);   /* a ligação já está à vista: acende, e o ponto anda sobre ela */
+          return map.travel(p.id, p.dir, 720, build).then(function (done) {
             if (!done || my !== run) return false;
             map.edge(p.id, "cur", p.dir); map.node(st.path[j], "seen", map.nodes[st.path[j]].g.classList.contains("swap") ? "swap" : "");
             var sub = (st.sub && st.sub[st.path[j + 1]]) || (sc.sub && sc.sub[st.path[j + 1]]);
@@ -495,7 +497,7 @@
     return comp;
   };
 
-  /* ---------- fluxos sobre o mapa da plataforma: o menu, o palco e a lista de passos. O mapa se monta à medida que o fluxo avança. ----------
+  /* ---------- fluxos sobre o mapa da plataforma: o menu, o palco e a lista de passos. O mapa aparece inteiro desde o começo; o fluxo acende o caminho, passo a passo. ----------
      groups: [{name, ids: [id ou [id, rótulo]]}]; list: de onde vêm os fluxos (cada um com phase: 1 a 4, ou 5 para proposta). */
   var WALK = [["act", "Passo atual"], ["seen", "Já percorrido"]], KINDS = [["core", "Peça da plataforma"], ["ext", "Já existe hoje"], ["person", "Pessoa"]];
   function phase(s) { return s.phase > 4 ? "Proposta" : "Fase " + s.phase; }
@@ -517,7 +519,7 @@
   U.Flows = function (id, groups, list, o) {
     var all = picked(groups, list).map(function (s) { return o.each ? Object.assign({}, s, o.each(s)) : s; });
     return U.Player(document.getElementById(id), {
-      scenarios: all, start: o.start, primary: o.primary, build: true, unit: "fluxo",
+      scenarios: all, start: o.start, primary: o.primary, unit: "fluxo",
       tag: function (s) { return phase(s) + " · " + s.short; }, onPick: o.onPick
     });
   };
@@ -536,7 +538,6 @@
     work.querySelector(".stage").classList.add("quiet");   /* a linha do tempo já mostra o progresso */
     function set(k) {
       cur = k; var out = o.apply(k, map);
-      map.hug();   /* cada zona aparece com a primeira peça dela e cresce com as seguintes */
       tEl.textContent = out.title; sEl.textContent = out.sub;
       each(tl.children, function (li, j) { li.className = j < k ? "reached" : j === k ? "reached now" : ""; li.firstChild.setAttribute("aria-pressed", j === k ? "true" : "false"); });
     }

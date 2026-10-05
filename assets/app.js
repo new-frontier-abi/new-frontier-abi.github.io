@@ -39,7 +39,7 @@
     if (arg && U.byId(D.tech, arg)) U.aim(tech);
   }
 
-  /* ---------- 2 e 3 · fluxos sobre o mapa executivo: o mapa se monta à medida que o fluxo avança ---------- */
+  /* ---------- 2 e 3 · fluxos sobre o mapa executivo: o mapa inteiro fica à vista, e o fluxo acende o caminho ---------- */
   function flows(tab, groups, arg, title, lead, below) {
     view.innerHTML = U.head(title, lead) + U.flows("fl", groups, D.scenarios) + "<div class='below'>" + below + "</div>";
     U.Flows("fl", groups, D.scenarios, { start: arg, primary: true, onPick: function (id) { U.hash(tab, id); } });
@@ -61,13 +61,13 @@
       "<p class='aside'><b>Para o time do ServiceNow.</b> Os fluxos de operação e de desenvolvimento, cada um com o desenho técnico, estão na página <a href='servicenow/'>ServiceNow</a>.</p>");
   }
 
-  /* ---------- 4 · Fases: o mapa mostra só o que existe em cada fase; o resto aparece quando a fase chega ---------- */
+  /* ---------- 4 · Fases: o mapa mostra o que existe em cada fase; o que ainda não existe fica só no contorno ---------- */
   function fases() {
     var P = D.phases;
     view.innerHTML = U.head("Cinco fases: primeiro a fundação, depois os agentes",
         "A fundação são as Fases 0 a 2: base, Automation Hub, MCP e Event Hub.") +
       "<div class='part' id='ph'>" + U.timeline(P.map(function (p) { return { b: p.n, name: p.name, when: p.when }; })) +
-      "<div class='work'>" + U.stage("play", U.legend([["new", "Entra nesta fase"], ["core", "Construído antes"], ["ext", "Já existe hoje"], ["person", "Pessoa"]])) +
+      "<div class='work'>" + U.stage("play", U.legend([["new", "Entra nesta fase"], ["core", "Construído antes"], ["ext", "Já existe hoje"], ["ghost", "Ainda não existe"]])) +
       "<aside class='side'><div class='panel'><h2>O que entra</h2><div class='pbody' id='ph-items'></div></div>" +
       "<div class='panel'><h2>Critério de saída</h2><div class='pbody' id='ph-gate'></div></div></aside></div></div>";
     function apply(k, map) {
@@ -76,9 +76,9 @@
         var d = map.nodes[n].def, last = null;
         for (var j = 0; j <= k; j++) if (P[j].news && P[j].news[n]) last = P[j].news[n];
         map.sub(n, d.p > k ? null : last);
-        map.node(n, d.p > k ? "hid" : F.news && F.news[n] ? "new" : "");   /* o que ainda não existe não aparece */
+        map.node(n, d.p > k ? "ghost" : F.news && F.news[n] ? "new" : "");
       }
-      for (var e in map.edges) { var p = map.edges[e].def.p; map.edge(e, p > k ? "hid" : p === k ? "new" : "seen", p > k ? 0 : map.natural(e)); }
+      for (var e in map.edges) { var p = map.edges[e].def.p; map.edge(e, p > k ? "ghost" : p === k ? "new" : "seen", p > k ? 0 : map.natural(e)); }
       document.getElementById("ph-items").innerHTML = "<ul>" + F.items.map(function (x) { return "<li>" + esc(x) + "</li>"; }).join("") + "</ul>";
       document.getElementById("ph-gate").innerHTML = "<div class='gate'>" + esc(F.gate) + "</div>" + (F.works.length ? "<p class='lab'>Passa a funcionar</p><div class='goes'>" + F.works.map(function (id) {
         var s = U.byId(D.scenarios, id), tab = D.acts.autoatendimento[0].ids.indexOf(id) >= 0 ? "autoatendimento" : "agentes";
