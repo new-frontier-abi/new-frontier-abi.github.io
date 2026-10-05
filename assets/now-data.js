@@ -1,5 +1,6 @@
-/* Conteúdo da página do time do ServiceNow: os dois modelos (operação e desenvolvimento), os desenhos em raias, os exemplos e as garantias.
-   Tudo o que não está no plano de fases aparece como proposta (p: 5 nos modelos, tag "Proposta" nos exemplos e nas raias).
+/* Conteúdo da página do time do ServiceNow: os fluxos de operação e de desenvolvimento (sobre o mapa de assets/data.js),
+   os desenhos em raias de cada fluxo, os exemplos do que o time recebe e as garantias.
+   Tudo o que não está no plano de fases aparece como proposta (phase: 5 nos fluxos, tag "Proposta" nos exemplos e nas raias).
    Tickets, ofertas, grupos e pessoas dos exemplos são fictícios. */
 window.NOW = {
   /* ---------- raias: quem pode participar de um processo, e em que camada fica ----------
@@ -19,6 +20,7 @@ window.NOW = {
     dev:     { t: "Time do|ServiceNow", k: "person", g: "p", d: "Revisa, ajusta e promove. Nada vai para produção sem o time." },
     sol:     { t: "Grupo|solucionador", k: "person", g: "p", d: "Atende o que a automação não resolve e decide o que fazer." },
     own:     { t: "Dono da|base",       k: "person", g: "p", d: "Quem cuida da base de conhecimento: revisa e publica." },
+    appr:    { t: "Dono do|grupo",      k: "person", g: "p", d: "Quem aprova o acesso. A regra de quem aprova continua no ServiceNow." },
     stellar: { t: "Stellar",            k: "ext",    g: "s", d: "O chat interno, para todos os funcionários. Hoje atende mais temas de RH, e TI está entrando." },
     ide:     { t: "IDE do time",        k: "ext",    g: "s", d: "As ferramentas de desenvolvimento do time, como clientes do MCP." },
     now:     { t: "ServiceNow",         k: "ext",    g: "s", d: "Catálogo, tickets e flows. A instância continua do time do ServiceNow." },
@@ -37,12 +39,12 @@ window.NOW = {
     target:  { t: "Sistema alvo",       k: "ext",    g: "x", d: "Onde a automação age: Entra ID, SAP e os demais sistemas com API." },
     others:  { t: "Outros|assinantes",  k: "ext",    g: "x", d: "Agentes, Stellar e outros times: cada um assina o que precisa." }
   },
-  seqLegend: [["act", "Etapa atual"], ["new", "Já percorrido"], ["core", "Serviço da plataforma"], ["az", "Serviço do Azure"], ["ext", "Já existe, ou é de outro time"], ["person", "Pessoa"]],
+  seqLegend: [["act", "Etapa atual"], ["seen", "Já percorrido"], ["core", "Serviço da plataforma"], ["az", "Serviço do Azure"], ["ext", "Já existe, ou é de outro time"], ["person", "Pessoa"]],
 
   /* Cada processo: quem participa (seq.parts, "id" ou "id:Título") e as etapas. hops: os trechos da etapa, [de, para, rótulo]; de igual a para é trabalho interno.
-     ph: a fase, para o menu. ex: o exemplo que mostra o que este processo entrega. */
+     ph: a fase. Cada fluxo das telas aponta para o processo que o mostra por dentro (tech, mais abaixo). */
   seqs: [
-    { id: "q-pedido", short: "Pedido com automação", ph: "Fase 1", tag: "Fase 1 · Atendimento", ex: "e-flow",
+    { id: "q-pedido", short: "Pedido com automação", ph: "Fase 1", tag: "Fase 1 · Atendimento",
       title: "Um pedido resolvido sem tarefa manual",
       lead: "Do catálogo ao item fechado. O ServiceNow chama uma vez; a plataforma cuida do resto e devolve o desfecho.",
       seq: { parts: ["emp", "now", "entra", "apim", "hub", "worker", "pg", "sb", "kv", "target"] },
@@ -56,6 +58,22 @@ window.NOW = {
         { t: "A automação inclui Ana no grupo", hops: [["worker", "target"]], d: "Falha passageira repete com espera. Esgotadas as tentativas, a execução fica separada, com o contexto." },
         { t: "O desfecho é gravado", hops: [["worker", "pg", "resultado"]], d: "Tentativa, duração e resultado, com log e rastro por tentativa." },
         { t: "O callback fecha o item, e Ana é avisada", hops: [["pg", "hub"], ["hub", "now", "callback"], ["now", "emp"]], d: "O subflow de callback fecha o item ou o encaminha ao grupo solucionador, com o motivo." }
+      ] },
+
+    { id: "q-aprova", short: "Acesso com aprovação", ph: "Fase 3", tag: "Fase 3 · Atendimento",
+      title: "Um acesso sensível, só depois da aprovação",
+      lead: "O risco está no manifesto da automação. Amarelo só executa depois que o dono do recurso aprova, no próprio ServiceNow.",
+      seq: { parts: ["emp", "appr", "now", "apim", "ing", "hub", "worker", "sb", "eh", "target"] },
+      steps: [
+        { t: "Ana pede acesso a um grupo restrito", hops: [["emp", "now"]], d: "Pelo catálogo, como hoje. O flow da oferta chega à ação DW Hub · Run Automation." },
+        { t: "A ação de Flow chama o Hub pelo gateway", hops: [["now", "apim"], ["apim", "hub"]], d: "A mesma ação de qualquer oferta. O risco não está no flow: está no manifesto da automação." },
+        { t: "Risco amarelo: a execução nasce em espera", hops: [["hub", "hub"]], d: "Nada é enfileirado ainda. Automação de risco vermelho é recusada na hora." },
+        { t: "O Hub abre o pedido de aprovação", hops: [["hub", "now", "pedido"]], d: "Pela entrada única de escrita, um subflow do time cria a aprovação para o dono do recurso." },
+        { t: "O dono do grupo decide", hops: [["now", "appr"], ["appr", "now", "decisão"]], d: "No ServiceNow, como qualquer aprovação. Quem aprova é regra da instância, não da plataforma." },
+        { t: "A decisão volta como evento", hops: [["now", "apim"], ["apim", "ing"], ["ing", "eh", "evento"]], d: "Aprovada ou rejeitada, sai uma vez, só com identificadores." },
+        { t: "Aprovada, a execução entra na fila", hops: [["eh", "hub"], ["hub", "sb", "mensagem"]], d: "Rejeitada, a execução é encerrada, e o item volta com o motivo." },
+        { t: "A automação inclui Ana no grupo", hops: [["sb", "worker"], ["worker", "target"]], d: "Worker e credencial do domínio, como em qualquer execução." },
+        { t: "O callback fecha o item, e Ana é avisada", hops: [["hub", "now", "callback"], ["now", "emp"]], d: "Fica registrado quem aprovou e o que foi executado." }
       ] },
 
     { id: "q-chat", short: "Pedido pelo Stellar", ph: "Fase 4", tag: "Fase 4 · Entrada",
@@ -73,7 +91,7 @@ window.NOW = {
         { t: "O desfecho volta para a conversa", hops: [["now", "apim"], ["apim", "ing"], ["ing", "eh", "evento"], ["eh", "stellar"]], d: "O item muda de estado, o evento sai uma vez, e o Stellar, que assina, avisa Ana." }
       ] },
 
-    { id: "q-triagem", short: "Triagem", ph: "Fase 4", tag: "Fase 4 · Triagem", ex: "e-triagem",
+    { id: "q-triagem", short: "Triagem", ph: "Fase 4", tag: "Fase 4 · Triagem",
       title: "Um incidente classificado na criação",
       lead: "O evento de incidente criado aciona uma chamada de modelo. A sugestão entra no ticket, e uma pessoa confirma.",
       seq: { parts: ["emp", "sol", "now", "apim", "ing", "agent:Classificação", "mcp", "pg", "eh", "llm"] },
@@ -88,7 +106,7 @@ window.NOW = {
         { t: "Quem tria confirma; o incerto fica com o time", hops: [["now", "sol"]], d: "Aplicar categoria e grupo sem ninguém confirmar fica para depois de medir o acerto, e pede um subflow novo do time." }
       ] },
 
-    { id: "q-prazo", short: "Prazo em risco", ph: "Fase 4", tag: "Fase 4 · Prazos", ex: "e-prazo",
+    { id: "q-prazo", short: "Prazo em risco", ph: "Fase 4", tag: "Fase 4 · Prazos",
       title: "Um prazo em risco, com o diagnóstico pronto",
       lead: "O aviso de 75% vira evento. O agente de Operação junta o contexto e deixa o diagnóstico no ticket.",
       seq: { parts: ["sol", "now", "apim", "ing", "agent:Agente de|Operação", "mcp", "hub", "pg", "eh", "llm"] },
@@ -103,7 +121,7 @@ window.NOW = {
         { t: "O diagnóstico chega no ticket", hops: [["agent", "mcp"], ["mcp", "now", "subflow"], ["now", "sol"]], d: "Nota de trabalho com o que parou e a sugestão. O agente não reatribui nem fecha nada." }
       ] },
 
-    { id: "q-kb", short: "Artigo de conhecimento", ph: "Fase 4", tag: "Fase 4 · Conhecimento", ex: "e-kb",
+    { id: "q-kb", short: "Artigo de conhecimento", ph: "Fase 4", tag: "Fase 4 · Conhecimento",
       title: "Um artigo que nasce dos tickets resolvidos",
       lead: "Quem cuida da base escolhe o tema. O rascunho sai dos tickets resolvidos, e uma pessoa revisa e publica.",
       seq: { parts: ["own", "now", "agent:Rascunho|de artigo", "mcp", "pg", "llm"] },
@@ -116,7 +134,7 @@ window.NOW = {
         { t: "Uma pessoa revisa e publica", hops: [["own", "now"]], d: "Pelo fluxo de publicação da base, como hoje. Depois, o artigo serve o portal, o Stellar e a triagem." }
       ] },
 
-    { id: "q-reuso", short: "O que já existe", ph: "Fase 2", tag: "Fase 2 · Demanda e arquitetura", ex: "e-reuso",
+    { id: "q-reuso", short: "O que já existe", ph: "Fase 2", tag: "Fase 2 · Demanda e arquitetura",
       title: "O que já existe, antes de construir",
       lead: "Pela IDE, o desenvolvedor pergunta ao catálogo do ServiceNow e ao da plataforma o que dá para reaproveitar.",
       seq: { parts: ["dev", "ide", "now", "entra", "apim", "mcp", "hub", "pg"] },
@@ -130,7 +148,7 @@ window.NOW = {
         { t: "A resposta diz o que reaproveitar", hops: [["mcp", "ide"], ["ide", "dev"]], d: "A oferta mais parecida, as variáveis que servem e a automação que já resolve. A decisão é do desenvolvedor." }
       ] },
 
-    { id: "q-rascunho", short: "Demanda vira rascunho", ph: "Fase 4", tag: "Fase 4 · Construção", ex: "e-oferta",
+    { id: "q-rascunho", short: "Demanda vira rascunho", ph: "Fase 4", tag: "Fase 4 · Construção",
       title: "Da demanda ao rascunho em sub-produção",
       lead: "A demanda aciona o agente Now Dev. Ele monta a configuração, sempre em sub-produção e com change request, e o time revisa.",
       seq: { parts: ["req", "dev", "now", "apim", "ing", "agent:Agente|Now Dev", "mcp", "pg", "eh", "llm"] },
@@ -145,7 +163,7 @@ window.NOW = {
         { t: "O time do ServiceNow revisa e promove", hops: [["now", "dev"]], d: "Ajustes voltam como comentário. A promoção segue o processo normal de mudança." }
       ] },
 
-    { id: "q-evento", short: "Evento sem trigger", ph: "Fase 2", tag: "Fase 2 · Construção", ex: "e-evento",
+    { id: "q-evento", short: "Evento sem trigger", ph: "Fase 2", tag: "Fase 2 · Construção",
       title: "Um time quer reagir a um registro",
       lead: "O time registra o evento uma vez. Daí em diante, quem quiser reagir assina, sem pedir nada ao ServiceNow.",
       seq: { parts: ["dev", "now", "apim", "ing", "mcp", "hub", "pg", "eh", "others"] },
@@ -159,7 +177,7 @@ window.NOW = {
         { t: "Mais um assinante, nada muda na instância", hops: [["eh", "others"]], d: "Agentes e, na Fase 4, o Stellar leem o mesmo evento, cada um no seu ritmo, e podem pedir o reenvio de uma janela." }
       ] },
 
-    { id: "q-regressao", short: "Regressão", ph: "Fase 4", tag: "Fase 4 · QA", ex: "e-regressao",
+    { id: "q-regressao", short: "Regressão", ph: "Fase 4", tag: "Fase 4 · QA",
       title: "As ofertas testadas antes de promover",
       lead: "O agente de QA pede cada oferta em sub-produção, confere o desfecho e entrega a evidência. Decidir é do time.",
       seq: { parts: ["dev", "now", "apim", "agent:Agente|de QA", "mcp", "hub", "pg", "llm"] },
@@ -173,7 +191,7 @@ window.NOW = {
         { t: "O resultado vai para a change request", hops: [["agent", "mcp"], ["mcp", "now", "subflow"], ["now", "dev"]], d: "Como comentário. Promover ou corrigir é decisão do time." }
       ] },
 
-    { id: "q-revisao", short: "Revisão de código", ph: "Proposta", tag: "Proposta · Revisão de código", ex: "e-revisao",
+    { id: "q-revisao", short: "Revisão de código", ph: "Proposta", tag: "Proposta · Revisão de código",
       title: "A primeira passada da revisão",
       lead: "Um update set concluído aciona uma chamada de modelo, que aponta os desvios antes da revisão humana.",
       note: "Pede um tipo de evento novo e uma ferramenta nova de leitura de update set, com subflow do time. Nenhum recurso novo no Azure. Regra fixa continua com a checagem da própria instância.",
@@ -187,7 +205,7 @@ window.NOW = {
         { t: "Os apontamentos chegam antes do revisor", hops: [["agent", "mcp"], ["mcp", "now", "subflow"], ["now", "dev"]], d: "Como comentário na change request. Aprovar a promoção continua com o revisor." }
       ] },
 
-    { id: "q-daily", short: "Resumo da daily", ph: "Proposta", tag: "Proposta · Daily e rotina", ex: "e-daily",
+    { id: "q-daily", short: "Resumo da daily", ph: "Proposta", tag: "Proposta · Daily e rotina",
       title: "O resumo pronto antes da daily",
       lead: "Uma agenda dispara a rotina, que lê o que mudou desde ontem e redige o resumo do time.",
       note: "Depende de onde o time registra o trabalho e de por onde quer receber o resumo. Nenhum recurso novo no Azure.",
@@ -200,19 +218,146 @@ window.NOW = {
       ] }
   ],
 
-  /* ---------- os dois modelos: etapas em colunas; em cada etapa, o que o time faz e o que a plataforma assume ----------
-     Linha do tempo: 0 hoje, 1 a 4 as fases, 5 além do plano (propostas). cap.p: quando a capacidade entra.
-     cap.seq: o desenho em raias que mostra por dentro. cap.go: [aba, filtro] para onde a proposta leva. */
-  pieces: [
-    { t: "Automation Hub", p: 1, to: "hub" },
-    { t: "Now Event Hub", p: 2, to: "eh" },
-    { t: "ServiceNow MCP", p: 2, to: "mcp" },
-    { t: "Agentes", p: 4, to: "ag" },
-    { t: "Stellar", p: 4, tip: "O chat interno já existe. Passa a usar as ferramentas na Fase 4." }
+  /* ---------- fluxos: o trabalho do time, passo a passo, sobre o mapa da plataforma (os nós e as ligações de assets/data.js) ----------
+     O mesmo formato dos fluxos da plataforma: path anda pelas ligações; sub troca a segunda linha de um nó. phase: 1 a 4, ou 5 para proposta (com note). */
+  flows: [
+    { id: "f-aprova", short: "Acesso com aprovação", phase: 3, title: "Acesso sensível: só executa depois da aprovação",
+      today: "Depois da aprovação, alguém do grupo solucionador concede o acesso à mão.",
+      steps: [
+        { path: ["user", "now"], t: "Ana pede acesso a um grupo restrito", d: "Pelo catálogo, como hoje." },
+        { path: ["now", "hub"], t: "A oferta chama o Hub", d: "A mesma ação de Flow de qualquer oferta. O risco não está no flow: está no manifesto da automação." },
+        { path: ["hub"], t: "Risco amarelo: a execução nasce em espera", d: "Nada é executado ainda. Automação de risco vermelho é recusada na hora." },
+        { path: ["hub", "now"], t: "O Hub abre o pedido de aprovação", d: "Um subflow do time cria a aprovação para o dono do recurso. Quem aprova é regra do ServiceNow." },
+        { path: ["now"], sub: { now: "o dono do grupo decide" }, t: "O dono do grupo aprova no ServiceNow", d: "Como qualquer aprovação de hoje. Se rejeitar, a execução é encerrada, e o item volta com o motivo." },
+        { path: ["now", "eh", "hub"], t: "A decisão volta como evento", d: "Aprovação concluída é um evento como os outros. Ele libera a execução que estava em espera." },
+        { path: ["hub", "target"], t: "A automação inclui Ana no grupo", d: "Fila, worker e credencial do domínio, como em qualquer execução." },
+        { path: ["hub", "now", "user"], t: "O item fecha, e Ana é avisada", d: "O desfecho volta por callback. Fica registrado quem aprovou e o que foi executado." }
+      ] },
+    { id: "f-prazo", short: "Prazo em risco", phase: 4, title: "Um prazo em risco, com o diagnóstico pronto", sub: { ag: "Agente Operação" },
+      today: "Quando o prazo aperta, alguém abre o ticket para descobrir onde parou.",
+      steps: [
+        { path: ["now"], t: "O prazo de um item passa de 75%", d: "O SLA é o de hoje: meta, calendário e pausas não mudam." },
+        { path: ["now", "eh"], t: "O aviso vira evento", d: "Mais uma linha no registro de eventos. Nenhuma regra nova na instância." },
+        { path: ["eh", "ag"], t: "O agente de Operação assume", d: "O evento abre uma execução, com limite de tempo e de custo." },
+        { path: ["ag", "mcp", "nowapi"], t: "Lê onde o item parou", d: "Estado, aprovações e tarefas do item, pelas ferramentas de leitura." },
+        { path: ["ag", "hub"], t: "Confere o que a automação fez", d: "A execução, as tentativas e o erro, direto do Hub." },
+        { path: ["ag", "llm"], t: "Regra primeiro; modelo só na exceção", d: "Os casos conhecidos saem por regra, sem custo de modelo. O que sobra vai ao Asimov." },
+        { path: ["ag", "mcp", "nowapi"], t: "O diagnóstico chega no ticket", d: "Nota de trabalho com o que parou e a sugestão. O agente não reatribui nem fecha nada." },
+        { path: ["now"], sub: { now: "o grupo decide a ação" }, t: "O grupo solucionador decide", d: "Cobrar, reatribuir ou escalar continua com as pessoas." }
+      ] },
+    { id: "f-kb", short: "Conhecimento", phase: 4, title: "Um artigo que nasce dos tickets resolvidos", sub: { ag: "Rascunho de artigo", team: "dono da base" },
+      today: "Artigos são escritos à mão, quando sobra tempo, e a mesma dúvida é respondida várias vezes.",
+      steps: [
+        { path: ["team", "ag"], t: "Quem cuida da base escolhe um tema", d: "Por exemplo, impressão. O pedido abre uma execução, com limite de tempo e de custo." },
+        { path: ["ag", "mcp", "nowapi"], t: "Busca os tickets resolvidos e confere a base", d: "O que se repete com a mesma solução é candidato a artigo. Se o artigo já existe, a sugestão é atualizar, não duplicar." },
+        { path: ["ag", "llm"], t: "O modelo redige o rascunho", d: "Sintoma, causa e solução, no modelo de artigo do time. Cada trecho aponta para o ticket de origem." },
+        { path: ["ag", "team"], t: "O rascunho volta para quem pediu", d: "Gravar direto na base, como rascunho, pede um subflow novo do time: fica como proposta." },
+        { path: ["nowapi"], sub: { nowapi: "base de conhecimento" }, t: "Uma pessoa revisa e publica", d: "Pelo fluxo de publicação da base, como hoje. Depois, o artigo serve o portal, o Stellar e a triagem." }
+      ] },
+    { id: "f-chat", short: "Pedido pelo Stellar", phase: 4, title: "Um pedido feito no Stellar",
+      today: "Sem ferramentas comuns, cada caso de uso novo no chat pede a própria integração.",
+      steps: [
+        { path: ["client", "mcp"], t: "Ana pede no Stellar", d: "Em linguagem natural, sem procurar a oferta no portal. O chat chama uma ferramenta, com o token de quem conversa." },
+        { path: ["mcp", "nowapi"], t: "Acha a oferta e pede em nome de Ana", d: "Catálogo e variáveis lidos com as permissões de Ana. A escrita passa por um subflow do time." },
+        { path: ["now", "hub"], t: "O flow da oferta chama a automação", d: "Como em um pedido do portal: aprovação, ação de Flow e automação. Nada é construído só para o chat." },
+        { path: ["hub", "target"], t: "A automação executa", d: "A mesma fila, o mesmo worker, o mesmo sistema alvo." },
+        { path: ["hub", "now"], t: "O callback fecha o item", d: "O desfecho fica no ticket, como em qualquer pedido." },
+        { path: ["now", "eh"], sub: { client: "assina o evento e avisa" }, t: "O desfecho volta para a conversa", d: "O item muda de estado, o evento sai uma vez, e o Stellar, que assina, avisa Ana." }
+      ] },
+
+    { id: "f-flow", short: "Flow sem script", phase: 1, title: "Um flow no Flow Designer, sem script de integração",
+      today: "Muitas ofertas terminam em tarefa manual, e cada integração pede script no flow.",
+      steps: [
+        { path: ["now"], sub: { now: "Flow Designer" }, t: "A tarefa manual dá lugar a uma ação", d: "No flow da oferta, DW Hub · Run Automation entra no lugar da tarefa. O resto do flow fica igual." },
+        { path: ["now", "hub"], t: "Três campos, nenhum script", d: "Qual automação, de onde vem cada parâmetro e o ticket, que impede execução em duplicidade." },
+        { path: ["hub", "target"], t: "A automação faz o que a tarefa fazia", d: "Fila, repetição, log e monitoramento vêm da plataforma." },
+        { path: ["hub", "now"], t: "O subflow de callback fecha o item", d: "O flow não fica esperando. Concluída: nota e item fechado. Falhou: nota com o motivo e tarefa para o grupo." },
+        { path: ["now"], t: "Oferta com automação vira configuração", d: "A mesma ação serve a todas as ofertas. Na Fase 4, o flow padrão já nasce com o rascunho da oferta." }
+      ] },
+    { id: "f-reuso", short: "O que já existe", phase: 2, title: "O que já existe, antes de construir",
+      today: "Achar uma oferta, um formulário ou uma automação parecida depende de quem lembra.",
+      steps: [
+        { path: ["ide", "mcp"], t: "O desenvolvedor pergunta pela IDE", d: "Já existe oferta parecida? Quais variáveis ela usa? Há automação para isso?" },
+        { path: ["mcp", "nowapi"], t: "Ofertas e formulários, do catálogo", d: "As ofertas parecidas e as variáveis de cada uma, lidas com as permissões de quem pergunta." },
+        { path: ["mcp", "hub"], t: "Automações, do catálogo do Hub", d: "Pela mesma porta, com os parâmetros que cada automação pede." },
+        { path: ["mcp", "ide"], t: "A resposta diz o que reaproveitar", d: "A oferta mais parecida, as variáveis que servem e a automação que já resolve. A decisão é do desenvolvedor, e a chamada fica auditada." }
+      ] },
+    { id: "f-evento", short: "Evento sem trigger", phase: 2, title: "Um time quer reagir a um registro, sem trigger novo",
+      today: "Cada integração pede uma business rule nova e uma chamada REST nova.",
+      steps: [
+        { path: ["now"], sub: { now: "registro de eventos" }, t: "O time registra o evento, uma vez", d: "Uma linha no registro: tabela, operação, condição e quais identificadores saem. A regra publicadora já existe." },
+        { path: ["now", "eh"], t: "Um item é aprovado, e o evento sai", d: "Uma vez, fora da transação do usuário, só com identificadores." },
+        { path: ["eh", "hub"], t: "Uma assinatura liga o evento à automação", d: "Configuração do dono da automação: tipo de evento, filtro e de onde vem cada parâmetro." },
+        { path: ["hub", "mcp", "nowapi"], t: "O detalhe vem pelas ferramentas", d: "As variáveis do item, lidas com permissão própria." },
+        { path: ["hub", "target"], t: "A execução nasce como qualquer outra", d: "Fila, worker e sistema alvo: o mesmo caminho do pedido pelo catálogo." },
+        { path: ["eh", "ag"], t: "Mais um assinante, nada muda na instância", d: "Agentes e, na Fase 4, o Stellar leem o mesmo evento, cada um no seu ritmo." }
+      ] },
+    { id: "f-form", short: "Formulário", phase: 4, title: "O formulário da oferta, campo por campo", sub: { ag: "Agente Now Dev", team: "time do ServiceNow" },
+      today: "Variáveis, tipos, opções e obrigatoriedade são criados um a um, e cada oferta sai de um jeito.",
+      steps: [
+        { path: ["now", "eh", "ag"], t: "O RH pede uma oferta nova", d: "A demanda diz o que a pessoa precisa informar e quem atende. O evento aciona o agente Now Dev." },
+        { path: ["ag", "mcp", "hub"], t: "As variáveis saem do contrato da automação", d: "Quando a oferta chama uma automação, os campos já nascem ligados aos parâmetros dela." },
+        { path: ["ag", "llm"], t: "Monta o formulário inteiro", d: "Variáveis, tipos, opções e obrigatoriedade, com os nomes no padrão do time." },
+        { path: ["ag", "mcp", "nowapi"], t: "O rascunho nasce em sub-produção", d: "Com change request. O time confere como o funcionário vai ver, como em qualquer oferta." },
+        { path: ["ag", "team"], t: "O time revisa a experiência de quem pede", d: "Regras de tela, como tornar um campo obrigatório conforme outro, ficam como proposta: pedem uma ferramenta nova." },
+        { path: ["client", "mcp", "nowapi"], t: "O mesmo formulário serve ao Stellar", d: "O chat lê as variáveis da oferta e pergunta só o que falta. Nada é construído à parte." }
+      ] },
+    { id: "f-qa", short: "Regressão", phase: 4, title: "As ofertas testadas antes de promover", sub: { ag: "Agente QA", team: "time do ServiceNow" },
+      today: "Conferir cada oferta depois de uma mudança toma tempo, e nem tudo tem teste automatizado.",
+      steps: [
+        { path: ["team", "ag"], t: "O time pede a regressão antes de promover", d: "Com a lista de ofertas e os usuários de teste. Tudo em sub-produção." },
+        { path: ["ag", "mcp", "nowapi"], t: "O agente pede cada oferta", d: "Pela mesma ferramenta que o chat usa, com um usuário de teste." },
+        { path: ["now", "hub", "target"], sub: { target: "sistemas de teste" }, t: "O flow da oferta roda de verdade", d: "A ação chama o Hub de non-prod. Nada toca produção." },
+        { path: ["hub", "now"], t: "A execução devolve o desfecho", d: "Fila, worker e callback, como em produção." },
+        { path: ["ag", "mcp", "hub"], t: "Confere o item e a execução de cada oferta", d: "Execução concluída e item fechado: passou. O aprovado é conferido em código, não pelo modelo." },
+        { path: ["ag", "llm"], t: "O modelo resume a evidência da falha", d: "O que parou, onde e o que mudou desde o último teste." },
+        { path: ["ag", "team"], t: "O resultado vai para a change request", d: "Como comentário. Promover ou corrigir é decisão do time." }
+      ] },
+
+    { id: "f-sla", short: "Contrato de SLA", phase: 5, title: "O contrato de SLA sai como rascunho", sub: { ag: "Agente Now Dev", team: "time do ServiceNow" },
+      today: "A definição é montada à mão: condições de início, de pausa e de parada, calendário e duração.",
+      note: "Pede uma ferramenta nova de configuração, com subflow do time. O aviso de prazo, na Fase 4, já está no plano.",
+      steps: [
+        { path: ["now", "eh", "ag"], t: "O combinado chega em texto", d: "O prazo, o que conta e o que não conta, na linguagem de quem pede." },
+        { path: ["ag", "mcp", "nowapi"], t: "Parte de um SLA parecido", d: "É a ferramenta nova: ler e rascunhar definições de SLA, por um subflow do time." },
+        { path: ["ag", "llm"], t: "Traduz o combinado para a definição", d: "Tipo, tabela, duração com calendário e as condições de início, de pausa e de parada. O OLA do grupo acompanha." },
+        { path: ["ag", "mcp", "nowapi"], t: "O rascunho nasce em sub-produção", d: "Com change request, como as ofertas." },
+        { path: ["ag", "team"], t: "O time negocia e aprova", d: "O prazo é decisão de negócio. O rascunho só poupa a montagem." }
+      ] },
+    { id: "f-revisao", short: "Revisão de código", phase: 5, title: "A primeira passada da revisão de código", sub: { ag: "Chamada de modelo", team: "revisor" },
+      today: "O revisor lê script e update set inteiros antes de promover.",
+      note: "Pede um tipo de evento novo e uma ferramenta nova de leitura de update set, com subflow do time. Regra fixa continua com a checagem da própria instância.",
+      steps: [
+        { path: ["now", "eh"], t: "Um update set é concluído, e o evento sai", d: "O desenvolvedor marca como concluído, como hoje. Um tipo de evento a mais: uma linha no registro." },
+        { path: ["eh", "ag"], t: "A revisão lê o evento", d: "Uma chamada de modelo, não um agente: ler e apontar é um passo só." },
+        { path: ["ag", "mcp", "nowapi"], t: "Lê o que mudou no update set", d: "É a ferramenta nova: leitura do conteúdo do update set, por um subflow do time." },
+        { path: ["ag", "llm"], t: "Compara com as boas práticas do time", d: "Os padrões do time entram como fonte. Cada apontamento cita a regra." },
+        { path: ["ag", "team"], t: "Os apontamentos chegam antes do revisor", d: "Como comentário na change request. Aprovar a promoção continua com ele." }
+      ] },
+    { id: "f-daily", short: "Daily", phase: 5, title: "O resumo pronto antes da daily", sub: { ag: "Resumo da daily", team: "time do ServiceNow" },
+      today: "O status do time é montado a partir do que cada um lembra.",
+      note: "Depende de onde o time registra o trabalho e de por onde quer receber o resumo.",
+      steps: [
+        { path: ["hub", "ag"], t: "Toda manhã, uma agenda inicia a rotina", d: "Agenda é configuração do Hub: quando rodar e com quais parâmetros." },
+        { path: ["ag", "mcp", "nowapi"], t: "Lê o que mudou desde ontem", d: "Demandas, change requests e incidentes do time, pelas ferramentas de leitura." },
+        { path: ["ag", "llm"], t: "O modelo redige o resumo", d: "Por item de trabalho, não por pessoa, com os bloqueios primeiro." },
+        { path: ["ag", "team"], t: "O resumo chega antes da daily", d: "No canal que o time preferir. Não avalia pessoas nem muda o estado de nada." }
+      ] }
   ],
+
+  /* ---------- as duas telas de fluxos ----------
+     groups: os fluxos do menu, da fase mais cedo à proposta. Um id sem "f-" vem de assets/data.js; [id, rótulo] troca o nome no menu.
+     changes: o que muda para o time, uma linha por etapa do trabalho: [etapa, hoje, com a plataforma, continua com o time, fluxo que mostra]. */
   run: {
-    aria: "Modelo operacional do time do ServiceNow: seis etapas, da entrada à melhoria, fase por fase",
-    who: ["RH", "TI", "Sistemas"],
+    groups: [{ name: null, ids: ["s-pedido", "f-aprova", "s-triagem", "f-prazo", "f-kb", "f-chat"] }],
+    changes: [
+      ["Entrada", "O funcionário procura a oferta no portal, e a dúvida vira ticket.", "O Stellar consulta chamados, pede ofertas e busca conhecimento pelas ferramentas (Fase 4).", "Cuida do catálogo e do conhecimento que o portal e o chat usam.", "f-chat"],
+      ["Triagem", "Alguém lê cada ticket, classifica e encaminha ao grupo certo.", "Uma chamada de modelo sugere categoria e grupo na criação do ticket (Fase 4).", "Confirma a sugestão e trata o que o modelo marcou como incerto.", "s-triagem"],
+      ["Atendimento", "A oferta termina em tarefa manual para o grupo solucionador.", "A oferta chama a automação, e o item fecha sozinho (Fase 1). Acesso sensível só executa depois da aprovação (Fase 3).", "Atende o que não tem automação e o que a automação devolveu.", "s-pedido"],
+      ["Prazos", "Quando o prazo aperta, alguém abre o ticket para descobrir onde parou.", "O aviso de prazo chega com o diagnóstico: onde o item parou e o que a automação fez (Fase 4).", "Decide a ação: cobrar, reatribuir ou escalar.", "f-prazo"],
+      ["Conhecimento", "O artigo é escrito à mão, quando sobra tempo.", "Rascunho de artigo a partir dos tickets resolvidos do tema (Fase 4).", "Revisa, publica e aposenta os artigos.", "f-kb"],
+      ["Melhoria", "Achar o que melhorar depende de alguém cruzar relatórios e tickets.", "Volume por oferta e tempo por grupo, pelas ferramentas de leitura (Fase 2).", "Decide o que vira problema, o que sai do catálogo e o que muda.", null]
+    ],
     /* o que muda para cada área que o time atende; cada linha diz a fase, ou que é proposta */
     areas: [
       ["RH", ["Ofertas e formulários de RH chegam como rascunho, e o mesmo formulário serve ao Stellar (Fase 4).",
@@ -224,140 +369,48 @@ window.NOW = {
       ["Sistemas", ["Acesso a sistema liberado por grupo. O que é sensível só executa depois da aprovação (Fases 1 e 3).",
         "Outro time quer reagir a um registro: assina o evento, sem pedir trigger (Fase 2).",
         "Automação nova para um sistema entra no catálogo e vale para qualquer oferta (Fase 3)."]]
-    ],
-    /* o que medir: só o indicador. A linha de base e a meta vêm da medição, não deste desenho. */
-    measures: [
-      ["Pedidos sem tarefa manual", "A parte dos itens que a automação fecha, por oferta."],
-      ["Tempo até o grupo certo", "Do ticket aberto ao grupo que resolve."],
-      ["Prazos estourados", "Quantos estouram, e quantos foram avisados antes."],
-      ["Conhecimento em uso", "Artigos publicados a partir de rascunho, e tickets que citam um artigo."]
-    ],
-    stages: [
-      { id: "entrada", name: "Entrada",
-        today: "O funcionário procura a oferta no portal, e a dúvida vira ticket.",
-        keeps: "Cuida do catálogo e do conhecimento que o portal e o chat usam.",
-        caps: [{ p: 4, t: "O Stellar consulta chamados, pede ofertas e busca conhecimento pelas ferramentas", pieces: ["Stellar", "MCP"], seq: "q-chat" }] },
-      { id: "triagem", name: "Triagem",
-        today: "Alguém lê cada ticket, classifica e encaminha ao grupo certo.",
-        keeps: "Confirma a sugestão e trata o que o modelo marcou como incerto.",
-        caps: [{ p: 4, t: "Uma chamada de modelo sugere categoria e grupo na criação do ticket", pieces: ["Event Hub", "MCP", "Asimov"], seq: "q-triagem" },
-          { p: 5, t: "Casos de RH, depois da avaliação de privacidade", go: ["agentes", "operacao"] }] },
-      { id: "atendimento", name: "Atendimento",
-        today: "A oferta termina em tarefa manual para o grupo solucionador.",
-        keeps: "Atende o que não tem automação e o que a automação devolveu.",
-        caps: [{ p: 1, t: "A oferta chama a automação, e o item fecha sozinho", pieces: ["Hub"], seq: "q-pedido" },
-          { p: 2, t: "Um evento dispara a automação, sem trigger novo", pieces: ["Event Hub", "Hub"], seq: "q-evento" },
-          { p: 3, t: "Acesso sensível só executa depois da aprovação", pieces: ["Hub"] }] },
-      { id: "prazos", name: "Prazos",
-        today: "Quando o prazo aperta, alguém abre o ticket para descobrir onde parou.",
-        keeps: "Decide a ação: cobrar, reatribuir ou escalar.",
-        caps: [{ p: 4, t: "O aviso de prazo chega com o diagnóstico: onde o item parou e o que a automação fez", pieces: ["Event Hub", "Agente", "MCP"], seq: "q-prazo" }] },
-      { id: "conhecimento", name: "Conhecimento",
-        today: "O artigo é escrito à mão, quando sobra tempo.",
-        keeps: "Revisa, publica e aposenta os artigos.",
-        caps: [{ p: 4, t: "Rascunho de artigo a partir dos tickets resolvidos do tema", pieces: ["MCP", "Asimov"], seq: "q-kb" },
-          { p: 5, t: "Lacunas da base e artigos vencidos, em lista periódica", go: ["agentes", "conhecimento"] }] },
-      { id: "melhoria", name: "Melhoria",
-        today: "Achar o que melhorar depende de alguém cruzar relatórios e tickets.",
-        keeps: "Decide o que vira problema, o que sai do catálogo e o que muda.",
-        caps: [{ p: 2, t: "Volume por oferta e tempo por grupo, pelas ferramentas de leitura", pieces: ["MCP"] },
-          { p: 5, t: "Candidatos a problema, higiene do catálogo e saúde dos grupos", go: ["agentes", "operacao"] }] }
-    ],
-    steps: [
-      { b: "Hoje", name: "Ponto de partida", when: "a base sai na Fase 0",
-        title: "Hoje: cada etapa passa por alguém do time",
-        text: "Pedidos de RH, de TI e de sistemas entram, são triados e atendidos à mão. O dia do time vai para o que se repete." },
-      { b: "Fase 1", name: "Automation Hub", when: "dez 2026–fev 2027",
-        title: "Fase 1: o pedido que se repete se resolve sozinho",
-        text: "A oferta chama uma automação do catálogo, e o item fecha sem tarefa manual. Se a automação falhar, vira tarefa para o grupo, com o motivo." },
-      { b: "Fase 2", name: "MCP e Event Hub", when: "mar–mai 2027",
-        title: "Fase 2: eventos e leitura, sem integração nova",
-        text: "Um evento dispara a automação sem trigger novo, e o time consulta volume e tempo pelas ferramentas." },
-      { b: "Fase 3", name: "Agentes de entrega", when: "jun–ago 2027",
-        title: "Fase 3: acesso sensível passa por aprovação",
-        text: "Automações de risco só executam depois da aprovação, e as ferramentas passam a escrever dentro do semáforo." },
-      { b: "Fase 4", name: "Conectar e escalar", when: "set 2027 em diante",
-        title: "Fase 4: triagem, prazo, conhecimento e Stellar",
-        text: "Uma chamada de modelo sugere a triagem, o agente de Operação diagnostica o prazo em risco, o conhecimento nasce dos tickets e o Stellar usa as mesmas ferramentas." },
-      { b: "Além", name: "Propostas", when: "fora do plano",
-        title: "Além do plano: propostas para o time escolher",
-        text: "Ideias que usam as mesmas peças, sem recurso novo no Azure. Só entram no plano se o time quiser." }
     ]
   },
   dev: {
-    aria: "Modelo de desenvolvimento no ServiceNow: seis etapas, da demanda à rotina, fase por fase",
-    who: ["RH", "TI", "Sistemas"],
-    measures: [
-      ["Tempo de entrega", "Da demanda à oferta em produção."],
-      ["Reuso", "Quantas ofertas novas partem de uma que já existe."],
-      ["Ajustes na revisão", "O que o time muda em cada rascunho antes de promover."],
-      ["Falhas pegas antes", "O que a regressão encontra antes da promoção."]
+    groups: [
+      { name: "No plano", ids: ["f-flow", "f-reuso", "f-evento", ["a-nowdev", "Oferta nova"], "f-form", "f-qa"] },
+      { name: "Propostas", ids: ["f-sla", "f-revisao", "f-daily"] }
     ],
-    stages: [
-      { id: "demanda", name: "Demanda e arquitetura",
-        today: "O pedido chega em texto livre, e achar algo parecido depende de quem lembra.",
-        keeps: "Prioriza, decide reaproveitar ou criar e aprova os desvios de padrão.",
-        caps: [{ p: 2, t: "Pela IDE, as ferramentas mostram o que já existe: ofertas, variáveis, eventos e automações", pieces: ["MCP"], seq: "q-reuso" },
-          { p: 4, t: "A demanda aciona o agente, que parte da oferta mais parecida", pieces: ["Event Hub", "Agente"], seq: "q-rascunho" },
-          { p: 5, t: "História com critérios de aceite, impacto da mudança e padrões do time", go: ["agentes", "dev"] }] },
-      { id: "construcao", name: "Construção",
-        today: "Item, formulário, flow e regra são montados à mão. Cada integração pede um trigger novo.",
-        keeps: "Revisa o rascunho e constrói o que foge do padrão.",
-        caps: [{ p: 1, t: "Oferta com automação: uma ação de Flow, sem script de integração", pieces: ["Hub"], seq: "q-pedido" },
-          { p: 2, t: "Evento novo: uma linha no registro, sem trigger", pieces: ["Event Hub"], seq: "q-evento" },
-          { p: 4, t: "Oferta, formulário, flow e regra chegam como rascunho", pieces: ["Agente", "MCP"], seq: "q-rascunho" },
-          { p: 5, t: "Contrato de SLA, regras de tela e flows fora do padrão", go: ["agentes", "catalogo"] }] },
-      { id: "revisao", name: "Revisão de código",
-        today: "O revisor lê script e update set inteiros antes de promover.",
-        keeps: "Aprova a promoção.",
-        caps: [{ p: 5, t: "A primeira passada aponta desvios das boas práticas do time", pieces: ["Event Hub", "MCP", "Asimov"], seq: "q-revisao" }] },
-      { id: "qa", name: "QA",
-        today: "Conferir cada oferta depois de uma mudança toma tempo, e nem tudo tem teste automatizado.",
-        keeps: "Aceita o risco e decide se a mudança segue.",
-        caps: [{ p: 4, t: "Regressão das ofertas em sub-produção, com a evidência da falha", pieces: ["Agente", "MCP", "Hub"], seq: "q-regressao" },
-          { p: 5, t: "Rascunho de testes automatizados de ofertas e flows", go: ["agentes", "dev"] }] },
-      { id: "devops", name: "DevOps",
-        today: "Empacotar a mudança, abrir a change request e escrever as notas de release.",
-        keeps: "Promove pelo processo de mudança, como hoje.",
-        caps: [{ p: 3, t: "Todo rascunho nasce com change request, só em sub-produção", pieces: ["MCP"] },
-          { p: 5, t: "Notas de release, documentação e triagem de upgrade", go: ["agentes", "dev"] }] },
-      { id: "rotina", name: "Daily e rotina",
-        today: "O status do time é montado a partir do que cada um lembra.",
-        keeps: "A conversa e as decisões da daily.",
-        caps: [{ p: 5, t: "Resumo do que mudou desde ontem, com os bloqueios primeiro", pieces: ["Hub", "MCP", "Asimov"], seq: "q-daily" }] }
-    ],
-    steps: [
-      { b: "Hoje", name: "Ponto de partida", when: "a base sai na Fase 0",
-        title: "Hoje: da demanda à promoção, tudo montado à mão",
-        text: "Cada oferta, formulário, flow e integração é configurado item a item, e revisado e testado à mão." },
-      { b: "Fase 1", name: "Automation Hub", when: "dez 2026–fev 2027",
-        title: "Fase 1: automação vira configuração do flow",
-        text: "Uma ação de Flow serve a todas as ofertas. Ligar uma oferta a uma automação deixa de ser integração." },
-      { b: "Fase 2", name: "MCP e Event Hub", when: "mar–mai 2027",
-        title: "Fase 2: reuso à vista e evento sem trigger",
-        text: "Pela IDE, o time vê o que já existe antes de construir. Evento novo é uma linha no registro." },
-      { b: "Fase 3", name: "Agentes de entrega", when: "jun–ago 2027",
-        title: "Fase 3: configuração só com change request",
-        text: "As ferramentas de configuração entram: só em sub-produção, sempre ligadas a uma change request." },
-      { b: "Fase 4", name: "Conectar e escalar", when: "set 2027 em diante",
-        title: "Fase 4: o rascunho chega pronto para revisar",
-        text: "O agente Now Dev monta oferta, formulário, flow e regra. O agente de QA roda a regressão antes da promoção." },
-      { b: "Além", name: "Propostas", when: "fora do plano",
-        title: "Além do plano: revisão, testes, release e daily",
-        text: "Propostas que usam as mesmas peças. Algumas pedem uma ferramenta nova, com subflow do time." }
+    changes: [
+      ["Demanda e arquitetura", "O pedido chega em texto livre, e achar algo parecido depende de quem lembra.", "Pela IDE, as ferramentas mostram o que já existe (Fase 2). A demanda aciona o agente, que parte da oferta mais parecida (Fase 4).", "Prioriza, decide reaproveitar ou criar e aprova os desvios de padrão.", "f-reuso"],
+      ["Construção", "Item, formulário, flow e regra são montados à mão. Cada integração pede um trigger novo.", "Uma ação de Flow, sem script (Fase 1). Evento novo é uma linha no registro (Fase 2). Oferta, formulário, flow e regra chegam como rascunho (Fase 4).", "Revisa o rascunho e constrói o que foge do padrão.", "a-nowdev"],
+      ["Revisão de código", "O revisor lê script e update set inteiros antes de promover.", "Proposta: a primeira passada aponta desvios das boas práticas do time.", "Aprova a promoção.", "f-revisao"],
+      ["QA", "Conferir cada oferta depois de uma mudança toma tempo, e nem tudo tem teste automatizado.", "Regressão das ofertas em sub-produção, com a evidência da falha (Fase 4).", "Aceita o risco e decide se a mudança segue.", "f-qa"],
+      ["DevOps", "Empacotar a mudança, abrir a change request e escrever as notas de release.", "Todo rascunho nasce com change request, só em sub-produção (Fase 3). Notas de release: proposta.", "Promove pelo processo de mudança, como hoje.", null],
+      ["Daily e rotina", "O status do time é montado a partir do que cada um lembra.", "Proposta: resumo do que mudou desde ontem, com os bloqueios primeiro.", "A conversa e as decisões da daily.", "f-daily"]
     ]
+  },
+  /* de cada fluxo para o desenho em raias que o mostra por dentro. Com lead ou note, o texto das raias muda para aquele fluxo. */
+  tech: {
+    "s-pedido": "q-pedido", "f-aprova": "q-aprova", "s-triagem": "q-triagem", "f-prazo": "q-prazo", "f-kb": "q-kb", "f-chat": "q-chat",
+    "f-flow": "q-pedido", "f-reuso": "q-reuso", "f-evento": "q-evento", "a-nowdev": "q-rascunho",
+    "f-form": { seq: "q-rascunho", lead: "O formulário nasce junto com o rascunho da oferta: o mesmo caminho, as mesmas ferramentas." },
+    "f-qa": "q-regressao",
+    "f-sla": { seq: "q-rascunho", note: "O mesmo caminho da oferta. A definição de SLA pede uma ferramenta nova, com subflow do time." },
+    "f-revisao": "q-revisao", "f-daily": "q-daily"
+  },
+  /* de cada fluxo para o exemplo que mostra o que o time recebe */
+  board: {
+    "s-pedido": "e-flow", "s-triagem": "e-triagem", "f-prazo": "e-prazo", "f-kb": "e-kb",
+    "f-flow": "e-flow", "f-reuso": "e-reuso", "f-evento": "e-evento", "a-nowdev": "e-oferta", "f-form": "e-form", "f-qa": "e-regressao",
+    "f-sla": "e-sla", "f-revisao": "e-revisao", "f-daily": "e-daily"
   },
 
   /* ---------- exemplos: o que o time recebe. Cada um é um quadro de cartões e os passos que acendem esses cartões. ----------
      Cartão: k (tipo), t (título), st [cor, texto], wide, by (rodapé) e o corpo: rows (pares), fields (formulário), steps (flow), items (lista),
-     form (prévia do formulário), doc (artigo), code, bar, q. seq: o desenho em raias do exemplo; tech: o que muda nele, quando é proposta. */
+     form (prévia do formulário), doc (artigo), code, bar, q. flow: [aba, fluxo] que conta a história deste exemplo. */
   exGroups: [
     { name: "Catálogo e serviço", ids: ["e-oferta", "e-form", "e-flow", "e-sla", "e-kb"] },
     { name: "Desenvolvimento", ids: ["e-reuso", "e-evento", "e-revisao", "e-regressao", "e-daily"] },
     { name: "Operação", ids: ["e-triagem", "e-prazo"] }
   ],
   examples: [
-    { id: "e-oferta", short: "Oferta", tag: "Fase 4 · agente Now Dev", seq: "q-rascunho",
+    { id: "e-oferta", short: "Oferta", tag: "Fase 4 · agente Now Dev", flow: ["desenvolvimento", "a-nowdev"],
       title: "Uma oferta nova chega pronta para revisar",
       today: "Item, formulário, flow e regra de atribuição são configurados à mão, a partir do ticket.",
       cards: [
@@ -387,10 +440,10 @@ window.NOW = {
         { on: ["item"], t: "Monta o item, com formulário e flow", d: "As variáveis saem do contrato da automação. O flow já nasce chamando a ação DW Hub · Run Automation." },
         { on: ["rule"], t: "Cria a regra de atribuição", d: "Se a automação falhar, a tarefa já cai no grupo certo." },
         { on: ["chg"], t: "Tudo nasce em sub-produção, com change request", d: "As ferramentas de configuração recusam produção e exigem uma change aberta." },
-        { on: ["chg", "item", "rule"], t: "O time revisa e promove", d: "Ajustes voltam ao agente como comentário. A promoção segue o processo normal de mudança." }
+        { on: ["chg", "item", "rule"], t: "O time revisa e promove", d: "A nota no ticket lista o que foi criado, o que conferir e o que não foi feito. A promoção segue o processo normal de mudança." }
       ] },
 
-    { id: "e-form", short: "Formulário", tag: "Fase 4 · agente Now Dev", seq: "q-rascunho",
+    { id: "e-form", short: "Formulário", tag: "Fase 4 · agente Now Dev", flow: ["desenvolvimento", "f-form"],
       title: "O formulário da oferta, campo por campo",
       today: "Variáveis, tipos, opções e obrigatoriedade são criados um a um, e cada oferta sai de um jeito.",
       cards: [
@@ -430,7 +483,7 @@ window.NOW = {
         { on: ["chat", "form"], t: "O mesmo formulário serve ao Stellar", d: "O chat lê as variáveis da oferta e pergunta só o que falta. Nada é construído à parte." }
       ] },
 
-    { id: "e-flow", short: "Flow", tag: "Fase 1 · ação de Flow", seq: "q-pedido",
+    { id: "e-flow", short: "Flow", tag: "Fase 1 · ação de Flow", flow: ["desenvolvimento", "f-flow"],
       title: "Um flow no Flow Designer, sem script de integração",
       today: "Muitas ofertas terminam em tarefa manual, e cada integração pede script no flow.",
       cards: [
@@ -476,11 +529,10 @@ window.NOW = {
         { on: ["who"], t: "Na Fase 4, o flow padrão já vem no rascunho", d: "O time revisa. Flows fora do padrão continuam com o time, com apoio como proposta." }
       ] },
 
-    { id: "e-sla", short: "Contrato de SLA", tag: "Proposta · ferramenta nova", seq: "q-rascunho",
+    { id: "e-sla", short: "Contrato de SLA", tag: "Proposta · ferramenta nova", flow: ["desenvolvimento", "f-sla"],
       title: "O contrato de SLA sai como rascunho, pronto para negociar",
       today: "A definição é montada à mão: condições de início, de pausa e de parada, calendário e duração.",
       note: "Pede uma ferramenta nova de configuração, com subflow do time. O aviso de prazo, na Fase 4, já está no plano.",
-      tech: "O mesmo caminho da oferta. A definição de SLA pede uma ferramenta nova, com subflow do time.",
       cards: [
         { id: "ask", k: "Demanda", t: "DMND0001288 · Prazo para a declaração de vínculo", st: ["wait", "Nova"],
           rows: [["Pedido por", "RH"], ["Combinado", "Entregar em até 2 dias úteis"], ["Não conta", "O tempo esperando o solicitante"]] },
@@ -509,7 +561,7 @@ window.NOW = {
         { on: ["chg"], t: "O time negocia e aprova", d: "O prazo é decisão de negócio. O rascunho só poupa a montagem." }
       ] },
 
-    { id: "e-kb", short: "Conhecimento", tag: "Fase 4 · rascunho de artigo", seq: "q-kb",
+    { id: "e-kb", short: "Conhecimento", tag: "Fase 4 · rascunho de artigo", flow: ["operacao", "f-kb"],
       title: "Um artigo que nasce dos tickets resolvidos",
       today: "Artigos são escritos à mão, quando sobra tempo, e a mesma dúvida é respondida várias vezes.",
       cards: [
@@ -551,7 +603,7 @@ window.NOW = {
         { on: ["use"], t: "O artigo passa a servir o portal e o Stellar", d: "Com TI entrando no Stellar, uma base de TI em dia vale também para o chat." }
       ] },
 
-    { id: "e-reuso", short: "Reuso", tag: "Fase 2 · ferramentas de leitura", seq: "q-reuso",
+    { id: "e-reuso", short: "Reuso", tag: "Fase 2 · ferramentas de leitura", flow: ["desenvolvimento", "f-reuso"],
       title: "Antes de construir, o que já existe",
       today: "Achar uma oferta, um formulário ou uma automação parecida depende de quem lembra.",
       cards: [
@@ -584,7 +636,7 @@ window.NOW = {
         { on: ["out"], t: "A resposta diz o que reaproveitar", d: "Construir do zero vira exceção. A decisão continua com o time." }
       ] },
 
-    { id: "e-evento", short: "Evento sem trigger", tag: "Fase 2 · Now Event Hub", seq: "q-evento",
+    { id: "e-evento", short: "Evento sem trigger", tag: "Fase 2 · Now Event Hub", flow: ["desenvolvimento", "f-evento"],
       title: "Um time quer reagir a um registro: uma linha, sem trigger novo",
       today: "Cada integração pede uma business rule nova e uma chamada REST nova.",
       cards: [
@@ -620,7 +672,7 @@ window.NOW = {
         { on: ["who"], t: "Mais um assinante, nenhuma mudança", d: "Hub, agentes e Stellar leem o mesmo evento. Reenvio não duplica." }
       ] },
 
-    { id: "e-revisao", short: "Revisão de código", tag: "Proposta · chamada de modelo", seq: "q-revisao",
+    { id: "e-revisao", short: "Revisão de código", tag: "Proposta · chamada de modelo", flow: ["desenvolvimento", "f-revisao"],
       title: "A primeira passada da revisão chega antes do revisor",
       today: "O revisor lê script e update set inteiros antes de promover.",
       note: "Pede um tipo de evento novo e uma ferramenta nova de leitura de update set, com subflow do time. Regra fixa continua com a checagem da própria instância.",
@@ -647,7 +699,7 @@ window.NOW = {
         { on: ["chg"], t: "O comentário chega antes da revisão humana", d: "O revisor começa pelo que importa. Aprovar a promoção continua com ele." }
       ] },
 
-    { id: "e-regressao", short: "Regressão", tag: "Fase 4 · agente de QA", seq: "q-regressao",
+    { id: "e-regressao", short: "Regressão", tag: "Fase 4 · agente de QA", flow: ["desenvolvimento", "f-qa"],
       title: "Antes de uma mudança, as ofertas são testadas sozinhas",
       today: "Conferir cada oferta depois de um upgrade ou de uma mudança de flow toma tempo.",
       cards: [
@@ -672,7 +724,7 @@ window.NOW = {
         { on: ["chg"], t: "O time decide se a mudança segue", d: "O agente aponta. Promover ou corrigir é decisão do time." }
       ] },
 
-    { id: "e-daily", short: "Daily", tag: "Proposta · chamada de modelo", seq: "q-daily",
+    { id: "e-daily", short: "Daily", tag: "Proposta · chamada de modelo", flow: ["desenvolvimento", "f-daily"],
       title: "A daily começa com o resumo pronto",
       today: "O status do time é montado a partir do que cada um lembra.",
       note: "Depende de onde o time registra o trabalho. O exemplo usa demandas, change requests e incidentes do ServiceNow.",
@@ -703,7 +755,7 @@ window.NOW = {
         { on: ["out", "lim"], t: "O time recebe antes da daily", d: "Onde o resumo chega é escolha do time. Decidir continua com ele." }
       ] },
 
-    { id: "e-triagem", short: "Triagem", tag: "Fase 4 · chamada de modelo", seq: "q-triagem",
+    { id: "e-triagem", short: "Triagem", tag: "Fase 4 · chamada de modelo", flow: ["operacao", "s-triagem"],
       title: "O ticket chega com a sugestão de grupo",
       today: "A triagem é manual até o ticket chegar ao grupo certo.",
       cards: [
@@ -731,7 +783,7 @@ window.NOW = {
         { on: ["thr"], t: "Quem tria confirma a sugestão", d: "Aplicar categoria e grupo sem ninguém confirmar fica para depois de medir o acerto, e pede um subflow novo do time." }
       ] },
 
-    { id: "e-prazo", short: "Prazo", tag: "Fase 4 · agente de Operação", seq: "q-prazo",
+    { id: "e-prazo", short: "Prazo", tag: "Fase 4 · agente de Operação", flow: ["operacao", "f-prazo"],
       title: "O aviso de prazo chega com o diagnóstico",
       today: "Quando o prazo aperta, alguém abre o ticket para descobrir onde parou.",
       cards: [
@@ -772,7 +824,7 @@ window.NOW = {
     title: "O que entra na instância",
     lead: "Uma ação de Flow, uma regra publicadora, uma entrada de escrita e um provedor de identidade. Nenhuma peça por integração, e tudo mantido pelo time do ServiceNow.",
     map: {
-      geo: { px: 30, py: 44, rp: 104, maxW: 940 },
+      geo: { px: 30, py: 44, rp: 104, nw: 198, maxW: 960 },
       nodes: [
         { id: "rec",   t: "Registros",         s: "itens, incidentes, demandas", c: 0, r: 0, k: "ext" },
         { id: "pub",   t: "Regra publicadora", s: "lê o registro de eventos",    c: 1, r: 0, k: "core" },
@@ -813,7 +865,7 @@ window.NOW = {
       { path: ["mcp", "srest", "sub"], t: "Toda escrita passa pelos subflows do time", d: "O MCP não grava em tabela. Amarelo recusa produção; vermelho só abre pedido." }
     ]
   },
-  insideLegend: [["act", "Passo atual"], ["new", "Já percorrido"], ["core", "Novo, com a plataforma"], ["ext", "Já existe na instância"], ["az", "Gateway de APIs"]],
+  insideLegend: [["act", "Passo atual"], ["seen", "Já percorrido"], ["core", "Novo, com a plataforma"], ["ext", "Já existe na instância"], ["az", "Gateway de APIs"]],
 
   /* ---------- Garantias ---------- */
   lights: [

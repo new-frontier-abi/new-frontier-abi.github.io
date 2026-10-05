@@ -4,7 +4,7 @@
 (function () {
   "use strict";
   var NS = "http://www.w3.org/2000/svg", uid = 0, pen = null;
-  var GW = 232, CW = 108, BW = 96, BH = 46, TOP = 44, RH = 44, PAD = 10;   /* margem das etapas, coluna, caixa, topo, linha */
+  var GW = 232, CW = 110, BW = 100, BH = 46, TOP = 44, RH = 44, PAD = 10;   /* margem das etapas, coluna, caixa, topo, linha */
 
   function el(name, attrs, text) {
     var e = document.createElementNS(NS, name);
@@ -64,12 +64,12 @@
       var zx = GW + az[0].c * CW + 3, zw = az.length * CW - 6;
       svg.appendChild(el("rect", { "class": "zone sq-zone", x: zx, y: 18, width: zw, height: H - 23, rx: 12 }));
       svg.appendChild(el("path", { "class": "sq-hex", transform: "translate(" + (zx + 3) + ",1.5)", d: "M6 0.5l5 2.9v5.8l-5 2.9l-5-2.9V3.4z" }));
-      svg.appendChild(el("text", { "class": "zone-l", x: zx + 19, y: 11 }, "AZURE"));
+      svg.appendChild(el("text", { "class": "zone-l", x: zx + 19, y: 12 }, "AZURE"));
     }
     lib.groups.forEach(function (g) {
       var m = parts.filter(function (p) { return p.g === g.id; });
       if (!m.length || !g.label) return;
-      var label = g.label.length * 6.9 <= m.length * CW - 16 ? g.label : g.short;   /* o nome curto, quando a camada tem uma coluna só */
+      var label = width(g.label, "700 9.5px " + family) + g.label.length * 1.15 <= m.length * CW - 16 ? g.label : g.short;   /* o nome curto, quando a camada tem uma coluna só */
       svg.appendChild(el("text", { "class": "sq-g", x: GW + (m[0].c + m.length / 2) * CW, y: 35 }, label));
       if (az.length && m[0] !== az[0]) svg.appendChild(el("line", { "class": "sq-sep", x1: GW + m[0].c * CW, y1: 24, x2: GW + m[0].c * CW, y2: H - 10 }));
     });
@@ -97,7 +97,7 @@
       p.name = p.t.replace("|", " ");
       g.setAttribute("aria-label", p.name + ": " + p.d);
       gL.appendChild(life);
-      g.appendChild(el("rect", { "class": "box", x: x, y: TOP, width: BW, height: BH, rx: 8 }));
+      g.appendChild(el("rect", { "class": "box", x: x, y: TOP, width: BW, height: BH, rx: 9 }));
       if (/core/.test(p.k)) g.appendChild(el("rect", { "class": "acc", x: x + 12, y: TOP + 5, width: BW - 24, height: 3, rx: 1.5 }));
       lines.forEach(function (ln, j) { g.appendChild(el("text", { "class": "t", x: p.x, y: TOP + (lines.length > 1 ? 21 + j * 15 : 29) + (/core/.test(p.k) ? 2 : 0) }, ln)); });
       g.addEventListener("mouseenter", function () { if (!pinned) look(p.id); });

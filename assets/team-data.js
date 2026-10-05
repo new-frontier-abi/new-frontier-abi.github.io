@@ -70,7 +70,7 @@ window.TEAM = {
   },
 
   /* ---------- 1 · Por dentro: o ambiente de dev, a esteira e um domínio de automações. Só tipo de serviço e papel. ---------- */
-  envLegend: [["act", "Passo atual"], ["new", "Já percorrido"], ["core", "Serviço da plataforma"], ["az", "Serviço do Azure"], ["ext", "Código e entrega"], ["person", "Pessoa"]],
+  envLegend: [["act", "Passo atual"], ["seen", "Já percorrido"], ["core", "Serviço da plataforma"], ["az", "Serviço do Azure"], ["ext", "Código e entrega"], ["person", "Pessoa"]],
   env: {
     id: "env", label: "Ambiente e esteira", tag: "Ambiente e esteira",
     title: "Do pull request ao cluster de dev",
@@ -225,12 +225,12 @@ window.TEAM = {
 
   /* ---------- 4 · Times ---------- */
   teams: {
-    geo: { cp: 300, maxW: 900 },
+    geo: { cp: 300, nw: 200, maxW: 930 },
     nodes: [
       { id: "now",     t: "Squad ServiceNow",    s: "ofertas, flows, eventos",   c: 0, r: 0, k: "person", p: 0 },
       { id: "idp",     t: "Identidade",          s: "aplicativos e tokens",      c: 0, r: 1, k: "person", p: 0 },
       { id: "net",     t: "Gateway e rede",      s: "APIs e rotas",              c: 0, r: 2, k: "person", p: 0 },
-      { id: "us",      t: "Time de automações",  s: "Hub, MCP, eventos, agentes", c: 1, r: 0, h: 3, k: "core", p: 0 },
+      { id: "us",      t: "Time de automações",  s: "plataforma e agentes",      c: 1, r: 0, h: 3, k: "core", p: 0 },
       { id: "stellar", t: "Squad Stellar",       s: "o chat interno",            c: 2, r: 0, k: "person", p: 0 },
       { id: "llm",     t: "Time do Asimov",      s: "gateway de modelos",        c: 2, r: 1, k: "person", p: 0 },
       { id: "zones",   t: "Operações",           s: "zonas e donos de negócio",  c: 2, r: 2, k: "person", p: 0 }

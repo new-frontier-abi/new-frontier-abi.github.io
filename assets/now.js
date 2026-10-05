@@ -1,77 +1,50 @@
-/* Página do time do ServiceNow: 1 operação e 2 desenvolvimento (o modelo por fase e, embaixo, cada etapa no Azure), 3 exemplos, 4 agentes, 5 garantias.
-   O conteúdo vem de assets/now-data.js e, para as funções, de assets/team-data.js; as peças das telas, de assets/ui.js; as raias, de assets/seq.js. */
+/* Página do time do ServiceNow: 1 operação e 2 desenvolvimento (os fluxos do trabalho do time e, embaixo, cada fluxo no Azure), 3 exemplos, 4 agentes, 5 garantias.
+   O conteúdo vem de assets/now-data.js; o mapa e os fluxos dos agentes, de assets/data.js; as funções, de assets/team-data.js;
+   as peças das telas, de assets/ui.js; as raias, de assets/seq.js. */
 (function () {
   "use strict";
-  var N = window.NOW, T = window.TEAM, U = window.DW.ui, esc = U.esc, view = U.view;
-  function seqOf(id) { return U.byId(N.seqs, id); }
+  var N = window.NOW, T = window.TEAM, D = window.DW, U = D.ui, esc = U.esc, view = U.view;
+  var FLOWS = D.scenarios.concat(N.flows);   /* os fluxos da plataforma e os do time, sobre o mesmo mapa */
+  var AGENTS = [{ name: "No ServiceNow", ids: ["a-nowdev"] }, { name: "Entrega de automações", ids: ["a-intake", "a-roi", "a-arch", "a-precode", "a-qa"] },
+    { name: "Operação", ids: ["a-ops"] }, { name: "Jornada", ids: ["s-demanda"] }];
   function down(el) { el.scrollIntoView({ behavior: window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block: "start" }); }
 
-  /* ---------- 1 e 2 · um modelo por fase: etapas em colunas; embaixo, o desenho em raias de cada etapa ---------- */
-  function model(tab, M, arg, title, lead) {
-    var ids = [];
-    M.stages.forEach(function (s) { s.caps.forEach(function (c) { if (c.seq && ids.indexOf(c.seq) < 0) ids.push(c.seq); }); });
-    var seqs = ids.map(function (id) { var s = seqOf(id); return Object.assign({}, s, { more: s.ex ? ["exemplos", s.ex, "Ver o exemplo →"] : null }); });
-    seqs.sort(function (a, b) { return (a.ph < b.ph ? -1 : a.ph > b.ph ? 1 : 0); });   /* no menu, na ordem das fases; as propostas por último */
+  /* o desenho em raias de um fluxo: o processo que o mostra por dentro, com o texto próprio do fluxo quando ele tem um */
+  function inside(flow) {
+    var t = N.tech[flow.id], own = typeof t === "string" ? {} : t, q = U.byId(N.seqs, own.seq || t);
+    return Object.assign({}, q, { id: flow.id, lead: own.lead || q.lead, note: own.note || q.note, tag: U.phase(flow) + " · " + flow.short });
+  }
+  /* o que muda para o time, uma linha por etapa do trabalho; a etapa leva ao fluxo que a mostra */
+  function changes(tab, rows) {
+    var cols = ["Etapa", "Hoje", "Com a plataforma", "Continua com o time"];
+    return "<div class='tscroll'><table><thead><tr>" + cols.map(function (c) { return "<th>" + c + "</th>"; }).join("") + "</tr></thead><tbody>" + rows.map(function (r) {
+      return "<tr><td data-th='" + cols[0] + "' class='nb'><b>" + esc(r[0]) + "</b>" + (r[4] ? "<button class='link sm' type='button' data-go='" + tab + "' data-arg='" + r[4] + "'>ver o fluxo</button>" : "") + "</td>" +
+        "<td data-th='" + cols[1] + "' class='was'>" + esc(r[1]) + "</td><td data-th='" + cols[2] + "'>" + esc(r[2]) + "</td><td data-th='" + cols[3] + "'>" + esc(r[3]) + "</td></tr>"; }).join("") + "</tbody></table></div>";
+  }
 
-    function cap(c) {
-      var tag = c.seq || c.go ? "button" : "div";
-      return "<li data-p='" + c.p + "'><" + tag + " class='opm-cap'" + (c.seq ? " type='button' data-seq='" + c.seq + "'" : c.go ? " type='button' data-go='" + c.go[0] + "' data-arg='" + c.go[1] + "'" : "") + ">" +
-        "<span class='ph'>" + (c.p > 4 ? "Proposta" : "Fase " + c.p) + "</span><span class='tx'>" + esc(c.t) + "</span>" +
-        "<span class='ft'>" + (c.pieces || []).map(function (p) { return "<span class='pz'>" + esc(p) + "</span>"; }).join("") +
-        (c.seq ? "<span class='in'>por dentro ↓</span>" : c.go ? "<span class='in'>ver na lista →</span>" : "") + "</span></" + tag + "></li>";
-    }
-    var board = "<div class='opm-top'><div><span class='lab'>Quem pede</span>" + M.who.map(function (w) { return "<span class='who'>" + esc(w) + "</span>"; }).join("") + "</div>" +
-      "<div><span class='lab'>O time usa</span>" + N.pieces.map(function (p) {
-        return p.to ? "<a class='pc' data-p='" + p.p + "' href='../#plataforma/" + p.to + "' title='Ver na página da plataforma'>" + esc(p.t) + "</a>" :
-          "<span class='pc' data-p='" + p.p + "' data-was='1' title='" + esc(p.tip) + "'>" + esc(p.t) + "</span>"; }).join("") + "</div></div>" +
-      "<ol class='opm-row'>" + M.stages.map(function (s, n) {
-        return "<li class='opm-s'><div class='opm-h'><i>" + U.pad(n + 1) + "</i><b>" + esc(s.name) + "</b></div><div class='opm-t'><small></small><p></p></div><ul class='opm-c'>" + s.caps.map(cap).join("") + "</ul></li>"; }).join("") + "</ol>";
-
-    view.innerHTML = U.head(title, lead) +
-      "<div class='part' id='mo'>" + U.timeline(M.steps.map(function (s) { return { b: s.b, name: s.name, when: s.when }; })) +
-      "<div class='work solo'>" + U.stage("play", U.legend([["new", "Entra nesta fase"], ["core", "Já funciona"], ["ghost", "Ainda não existe"], ["team", "Continua com o time"]]), "model") + "</div></div>" +
-      "<div class='part' id='tec'>" + U.sect("Técnico", "Por dentro: cada etapa no Azure",
-        "Uma linha por etapa, uma coluna por participante. Dentro da zona tracejada está o que roda no Azure. Passe o cursor, ou toque, em um participante para ver o papel dele e em quais etapas entra.") +
-      U.seg([{ items: seqs.map(function (s) { return [s.id, s.short, s.ph]; }) }], "Desenhos técnicos") +
+  /* ---------- 1 e 2 · os fluxos do trabalho do time; embaixo, o fluxo escolhido por dentro, no Azure ---------- */
+  function flowsTab(tab, M, arg, title, lead) {
+    var list = []; M.groups.forEach(function (g) { g.ids.forEach(function (x) { var one = typeof x === "string", f = U.byId(FLOWS, one ? x : x[0]); list.push(one ? f : Object.assign({}, f, { short: x[1] })); }); });
+    view.innerHTML = U.head(title, lead) + U.flows("fl", M.groups, FLOWS, "Fluxos") +
+      "<div class='part' id='tec'>" + U.sect("Técnico", "Por dentro: o mesmo fluxo no Azure",
+        "Uma linha por etapa, uma coluna por participante. Dentro da zona tracejada está o que roda no Azure. Passe o cursor, ou toque, em um participante para ver o papel dele.") +
       "<div class='work solo'>" + U.stage("play", U.legend(N.seqLegend)) + "</div></div>" +
-      "<div class='below'>" + (M.areas ? U.sect(null, "Para quem atende RH, TI e sistemas", "As mesmas peças servem às três frentes. O que muda é o que cada uma ganha, e quando.") +
-        "<div class='cols'>" + M.areas.map(function (a) { return "<div class='col'><h3>" + esc(a[0]) + "</h3><ul>" + a[1].map(function (x) { return "<li>" + esc(x) + "</li>"; }).join("") + "</ul></div>"; }).join("") + "</div>" : "") +
-      U.sect(null, "Como saber se funcionou",
-        "A linha de base é medida antes de começar, e as metas saem dela. A capacidade liberada é remanejada conforme estes indicadores, não pelo calendário.") +
-      U.cols(M.measures) + "</div>";
-
-    var mo = document.getElementById("mo"), tec = document.getElementById("tec"), canvas = mo.querySelector(".js-model");
-    canvas.innerHTML = board;
-    canvas.setAttribute("role", "group");
-    var cols = canvas.querySelectorAll(".opm-s");
-    function apply(k) {
-      M.stages.forEach(function (s, n) {
-        var live = s.caps.some(function (c) { return c.p <= k; }), fresh = s.caps.some(function (c) { return c.p === k; }), col = cols[n];
-        col.className = "opm-s" + (fresh ? " live fresh" : live ? " live" : "");
-        col.querySelector(".opm-t small").textContent = live ? "Continua com o time" : "Hoje, com o time";
-        col.querySelector(".opm-t p").textContent = live ? s.keeps : s.today;
-      });
-      Array.prototype.forEach.call(canvas.querySelectorAll("[data-p]"), function (e) {
-        var p = +e.getAttribute("data-p"), st = p > k ? "ghost" : p === k ? "new" : "on";
-        if (e.tagName === "LI") e.className = st; else e.className = "pc " + (st === "ghost" && e.getAttribute("data-was") ? "was" : st);   /* o que já existe hoje não aparece como tracejado */
-      });
-      return { title: M.steps[k].title, sub: M.steps[k].text };
-    }
-    var player = U.Player(tec, { scenarios: seqs, start: arg, lib: N, tag: function (s) { return s.tag; }, onPick: function (id) { U.hash(tab, id); } });
-    U.Phased(mo, { steps: M.steps, start: 4, apply: apply, subOf: function (k) { return M.steps[k].text; }, primary: true, aria: M.aria });
-    canvas.addEventListener("click", function (ev) {
-      var b = ev.target.closest("[data-seq]"); if (!b) return;
-      player.load(b.getAttribute("data-seq")); U.hash(tab, b.getAttribute("data-seq")); down(tec);
-    });
-    if (arg && U.byId(seqs, arg)) tec.scrollIntoView();
+      "<div class='below'>" + U.sect(null, "O que muda no trabalho do time", "Uma linha por etapa. A capacidade liberada é remanejada conforme os indicadores, não pelo calendário.") + changes(tab, M.changes) +
+      (M.areas ? U.sect(null, "Para quem atende RH, TI e sistemas", "As mesmas peças servem às três frentes. O que muda é o que cada uma ganha, e quando.") +
+        "<div class='cols'>" + M.areas.map(function (a) { return "<div class='col'><h3>" + esc(a[0]) + "</h3><ul>" + a[1].map(function (x) { return "<li>" + esc(x) + "</li>"; }).join("") + "</ul></div>"; }).join("") + "</div>" : "") + "</div>";
+    var part = document.getElementById("tec"), tec = U.Player(part, { scenarios: list.map(inside), start: arg, lib: N, tag: function (s) { return s.tag; } });
+    U.Flows("fl", M.groups, FLOWS, { start: arg, primary: true,
+      each: function (s) { return { down: "Ver por dentro ↓", more: N.board[s.id] ? ["exemplos", N.board[s.id], "Ver o que o time recebe →"] : null }; },
+      onPick: function (id) { U.hash(tab, id); tec.load(id); } });
+    document.getElementById("fl").addEventListener("click", function (ev) { if (ev.target.closest(".js-down")) down(part); });
   }
   function operacao(arg) {
-    model("operacao", N.run, arg, "O time decide. O que se repete sai da fila.",
-      "O dia a dia de um time que atende RH, TI e sistemas, etapa por etapa: o que a plataforma assume em cada fase e o que continua com as pessoas.");
+    flowsTab("operacao", N.run, arg, "O time decide. O que se repete sai da fila.",
+      "O dia a dia de um time que atende RH, TI e sistemas, fluxo por fluxo: o que a plataforma assume em cada fase e o que continua com as pessoas.");
   }
   function desenvolvimento(arg) {
-    model("desenvolvimento", N.dev, arg, "Desenvolver no ServiceNow: menos montagem, mais revisão",
-      "Da demanda à promoção, etapa por etapa: o que deixa de ser montado à mão em cada fase. Quem decide e promove continua sendo o time.");
+    flowsTab("desenvolvimento", N.dev, arg, "Desenvolver no ServiceNow: menos montagem, mais revisão",
+      "Da demanda à promoção, fluxo por fluxo: o que deixa de ser montado à mão em cada fase. Quem decide e promove continua sendo o time.");
   }
 
   /* ---------- cartão do quadro: um artefato do ServiceNow ou da plataforma ---------- */
@@ -99,49 +72,49 @@
       "<div class='ac-b'>" + body + "</div>" + (c.by ? "<footer>" + esc(c.by) + "</footer>" : "") + "</article>";
   }
 
-  /* ---------- 3 · Exemplos: o que o time recebe; embaixo, o caminho do exemplo escolhido ---------- */
+  /* ---------- 3 · Exemplos: o que o time recebe, cartão por cartão; cada exemplo leva ao fluxo que conta a história ---------- */
   function exemplos(arg) {
     var items = N.exGroups.map(function (g) { return { name: g.name, items: g.ids.map(function (id) { return [id, U.byId(N.examples, id).short]; }) }; });
-    var list = N.examples.map(function (e) { return Object.assign({}, e, { down: "Ver por dentro ↓" }); });
-    /* o desenho técnico acompanha o exemplo: o mesmo processo das outras abas, com o aviso do que muda quando o exemplo é proposta */
-    var paths = N.examples.map(function (e) { var s = seqOf(e.seq); return Object.assign({}, s, { id: e.id, more: null, note: e.tech || s.note }); });
+    var list = []; N.exGroups.forEach(function (g) { g.ids.forEach(function (id) { var e = U.byId(N.examples, id); list.push(Object.assign({}, e, { more: [e.flow[0], e.flow[1], "Ver o fluxo →"] })); }); });
     view.innerHTML = U.head(N.examples.length + " exemplos do que o time recebe pronto",
         "Oferta, formulário, flow, contrato de SLA e artigo de conhecimento, entre outros. Em todos, o time revisa e decide.") +
       "<div class='part' id='ex'>" + U.seg(items, "Exemplos") +
-      "<div class='work'>" + U.stage("play", U.legend([["new", "Passo atual"]]) + "<span class='js-fl'><b class='rq'>*</b>obrigatório</span><span class='js-fl'><b class='ar'>→</b>para onde o valor vai</span>", "board") + "<aside class='side'>" + U.steps() + "</aside></div></div>" +
-      "<div class='part' id='tec'>" + U.sect("Técnico", "Por dentro: o caminho deste exemplo no Azure",
-        "Uma linha por etapa, uma coluna por participante. Dentro da zona tracejada está o que roda no Azure. Passe o cursor, ou toque, em um participante para ver em quais etapas ele entra.") +
-      "<div class='work solo'>" + U.stage("play", U.legend(N.seqLegend)) + "</div></div>";
-    var tec = document.getElementById("tec"), ex = document.getElementById("ex");
+      "<div class='work'>" + U.stage("play", U.legend([["act", "Passo atual"]]) + "<span class='js-fl'><b class='rq'>*</b>obrigatório</span><span class='js-fl'><b class='ar'>→</b>para onde o valor vai</span>", "board") + "<aside class='side'>" + U.steps() + "</aside></div></div>";
+    var ex = document.getElementById("ex");
     /* a legenda dos campos só aparece nos exemplos que têm formulário */
     function legend(id) {
       var has = U.byId(N.examples, id).cards.some(function (c) { return c.fields; });
       Array.prototype.forEach.call(ex.querySelectorAll(".js-fl"), function (e) { e.hidden = !has; });
     }
-    var path = U.Player(tec, { scenarios: paths, start: arg, lib: N, tag: function (s) { return s.tag; } });
     var board = U.Player(ex, {
-      scenarios: list, start: arg, primary: true, card: card,
-      tag: function (c) { return c.tag; }, onPick: function (id) { U.hash("exemplos", id); path.load(id); legend(id); }
+      scenarios: list, start: arg, primary: true, card: card, unit: "exemplo",
+      tag: function (c) { return c.tag; }, onPick: function (id) { U.hash("exemplos", id); legend(id); }
     });
     legend(board.current());
-    ex.addEventListener("click", function (ev) { if (ev.target.closest(".js-down")) down(tec); });
   }
 
-  /* ---------- 4 · Agentes: cada trabalho de hoje com a menor solução que resolve ---------- */
+  /* ---------- 4 · Agentes: o fluxo inteiro de cada um; embaixo, quem o time encontra e o catálogo dos trabalhos ---------- */
   function agentes(arg) {
     var F = T.functions.filter(function (f) { return f[11]; });
     var agents = F.filter(function (f) { return f[5] === "agente"; }).length, plan = F.filter(function (f) { return !f[10]; }).length;
-    view.innerHTML = U.head(F.length + " trabalhos de hoje que a plataforma assume ou acelera. Só " + agents + " pedem um agente.",
-        plan + " estão no plano de fases. Os outros " + (F.length - plan) + " são propostas, para o time escolher. Toque em um cartão para ver o antes, o depois e o que continua com pessoas.") +
-      "<div class='part' id='fn'>" + U.functions(F, N.temas, true, 11) + "</div>" +
+    var tema = arg === "funcoes" ? "" : arg && N.temas.some(function (t) { return t[0] === arg; }) ? arg : null;   /* um tema no endereço abre o catálogo já filtrado */
+    view.innerHTML = U.head("Sete agentes, do gatilho à decisão de uma pessoa",
+        "O fluxo inteiro de cada um: o que o aciona, o que ele lê no ServiceNow e no Hub, o que entrega no DevOps ou no ticket e quem decide.") +
+      U.flows("fl", AGENTS, D.scenarios, "Agentes") +
       "<div class='below'>" + U.sect(null, "Quem o time vai encontrar na Fase 4", "Cada um entrega algo que uma pessoa revisa. Nenhum promove, publica, reatribui ou fecha sozinho.") +
       U.table(["Quem", "O que é", "Entrega", "Limite"], N.named, ["nb", "nb", "", ""]) +
+      U.sect(null, F.length + " trabalhos de hoje que a plataforma assume ou acelera. Só " + agents + " pedem um agente.",
+        plan + " estão no plano de fases. Os outros " + (F.length - plan) + " são propostas, para o time escolher.", "catalogo") +
+      "<details class='fold' id='cat'" + (tema != null ? " open" : "") + "><summary>Ver os " + F.length + " trabalhos, por tema</summary>" +
+      "<div class='part' id='fn'>" + U.functions(F, N.temas, true, 11) + "</div>" +
+      "<p class='aside'><b>Ferramenta nova.</b> " + esc(N.tools) + "</p></details>" +
       U.sect(null, "A menor solução que resolve", "Código antes de modelo, modelo antes de agente. É por isso que a maior parte da lista não é agente.") +
       "<div class='ladder'>" + T.ladder.map(function (l, i) { return "<div><small>" + (i + 1) + (l[2] ? " · " + esc(l[2]) : "") + "</small><b>" + esc(l[0]) + "</b><span>" + esc(l[1]) + "</span></div>"; }).join("") + "</div>" +
       U.sect(null, "O que todo agente tem") + U.cols(T.controls) +
-      "<p class='aside'><b>Ferramenta nova.</b> " + esc(N.tools) + "</p>" +
       "<p class='aside'><b>Por dentro.</b> O desenho técnico de uma execução de agente no Azure está na página da <a href='../#plataforma/ag'>plataforma</a>.</p></div>";
-    U.Functions(document.getElementById("fn"), arg && N.temas.some(function (t) { return t[0] === arg; }) ? arg : "");
+    U.Functions(document.getElementById("fn"), tema || "");
+    U.Flows("fl", AGENTS, D.scenarios, { start: tema != null ? null : arg, primary: true, onPick: function (id) { U.hash("agentes", id); } });
+    if (tema != null) document.getElementById("catalogo").scrollIntoView();
   }
 
   /* ---------- 5 · Garantias ---------- */
@@ -150,7 +123,7 @@
       "<div class='sem'>" + N.lights.map(function (l) { return "<div class='c-" + l[0] + "'><small>" + esc(l[1]) + "</small><b>" + esc(l[2]) + "</b><span>" + esc(l[3]) + "</span></div>"; }).join("") + "</div>" +
       "<div class='below'>" + U.sect(null, "O que não acontece") + U.cols(N.never) + "</div>" +
       "<div class='part' id='inside'>" + U.sect("Técnico", "Por dentro: o que entra na instância",
-        "Poucas peças, as mesmas para todas as integrações. O que está em dourado é novo; o resto é a instância de hoje.") +
+        "Poucas peças, as mesmas para todas as integrações. O que tem a marca amarela é novo; o resto é a instância de hoje.") +
       "<div class='work'>" + U.stage("play", U.legend(N.insideLegend)) + "<aside class='side'>" + U.steps() + "</aside></div></div>" +
       "<div class='below'>" + U.sect(null, "O que entra na instância, e quando", "Quem constrói e mantém é o time do ServiceNow. O que a plataforma entrega é a fonte de cada artefato, para revisão.") +
       U.table(["Fase", "O time constrói", "Passa a funcionar"], N.asks, ["nb", "", ""]) +
