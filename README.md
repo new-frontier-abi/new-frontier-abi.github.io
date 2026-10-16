@@ -63,7 +63,7 @@ O conteúdo fica só nos quatro arquivos de dados. Não há build: sirva a pasta
 - **Processo em raias**: quem participa (`seq.parts`, tirado de `parts`) e as etapas. Cada etapa tem os trechos que percorre (`hops`: de, para e um rótulo curto). A camada de cada participante (`g`) decide se ele fica dentro da zona do Azure.
 - **Exemplo do ServiceNow**: um quadro de cartões (`cards`) e os passos que acendem cada cartão (`on`; o primeiro é o que fica à vista). `flow` diz qual fluxo conta a história dele.
 
-O endereço guarda a seção e o fluxo: `#dw/a-qa`, `#criar/c-agente`, `#governanca`, `plataforma/#plataforma/hub`, `servicenow/#operacao/f-prazo`, `servicenow/#exemplos/e-oferta`. `#dw/funcoes` abre direto na lista das funções, e `#decisao/quem`, na tabela de quem decide. O botão de voltar do navegador anda pelas seções.
+O endereço guarda a seção e o fluxo: `#dw/a-qa`, `#criar/c-agente`, `#governanca`, `plataforma/#plataforma/hub`, `servicenow/#operacao/f-prazo`, `servicenow/#exemplos/e-oferta`. `#dw/funcoes` abre direto na lista das funções, e `#decisao/quem`, no bloco de quem decide. O botão de voltar do navegador anda pelas seções.
 
 Os endereços de antes continuam valendo: `#plataforma`, `#autoatendimento` e `#fases`, na entrada, levam à página da plataforma; `#agentes`, em qualquer página, leva aos agentes do DW, na entrada (no ServiceNow, só os fluxos que saíram de lá).
 

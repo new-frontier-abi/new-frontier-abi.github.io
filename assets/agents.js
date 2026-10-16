@@ -11,7 +11,7 @@
     return "<div class='jumps'>" + list.map(function (j) { return "<a class='jump' href='" + j[0] + "'><small>" + esc(j[1]) + "</small><b>" + esc(j[2]) + "</b><span>" + esc(j[3]) + "</span></a>"; }).join("") + "</div>";
   }
   function stepper(list) { return "<ol class='stepper'>" + list.map(function (b, i) { return "<li><small>" + U.pad(i + 1) + "</small><b>" + esc(b[0]) + "</b><span>" + esc(b[1]) + "</span></li>"; }).join("") + "</ol>"; }
-  /* ícones dos painéis: traço simples, na cor do texto */
+  /* ícones dos dois one pagers: traço simples, na cor do texto */
   var IC = {
     target: "<circle cx='12' cy='12' r='8.5'/><circle cx='12' cy='12' r='4.8'/><circle cx='12' cy='12' r='1.4'/>",
     shield: "<path d='M12 3l7 3v5.6c0 4.4-2.9 7.6-7 9.4-4.1-1.8-7-5-7-9.4V6z'/><path d='M8.6 12.1l2.4 2.4 4.5-4.9'/>",
@@ -23,10 +23,32 @@
     esc: "<path d='M12 6.5v7.5M12 17.5v.4'/>",
     person: "<circle cx='12' cy='8.3' r='3.6'/><path d='M5 20c0-4 3.1-6.6 7-6.6s7 2.6 7 6.6'/>",
     gear: "<circle cx='12' cy='12' r='3.2'/><path d='M12 2.8v2.6M12 18.6v2.6M2.8 12h2.6M18.6 12h2.6M5.5 5.5l1.9 1.9M16.6 16.6l1.9 1.9M5.5 18.5l1.9-1.9M16.6 7.4l1.9-1.9'/>",
-    proof: "<path d='M14.5 3.5H6.5v17h6'/><path d='M14.5 3.5l4 4v4.5M14.5 3.5v4h4'/><circle cx='16.5' cy='16.5' r='3'/><path d='M18.7 18.7l2.3 2.3'/>"
+    proof: "<path d='M14.5 3.5H6.5v17h6'/><path d='M14.5 3.5l4 4v4.5M14.5 3.5v4h4'/><circle cx='16.5' cy='16.5' r='3'/><path d='M18.7 18.7l2.3 2.3'/>",
+    repeat: "<path d='M4.5 11a7.5 7.5 0 0 1 13-4.7L19.5 8.5M19.5 4v4.5H15M19.5 13a7.5 7.5 0 0 1-13 4.7L4.5 15.5M4.5 20v-4.5H9'/>",
+    key: "<circle cx='8' cy='12' r='4'/><path d='M12 12h9M18 12v3M21 12v2.2'/>",
+    bulb: "<path d='M9.5 17.5h5M10.5 20.5h3M12 3.5a5.8 5.8 0 0 0-3.4 10.5c.7.5 1 1.2 1 2v.5h4.8V16c0-.8.4-1.5 1-2A5.8 5.8 0 0 0 12 3.5z'/>",
+    code: "<path d='M8.5 7.5L4 12l4.5 4.5M15.5 7.5L20 12l-4.5 4.5M13.4 5.5l-2.8 13'/>",
+    chat: "<path d='M4.5 5.5h15v10.5H10l-5.5 4z'/><path d='M8.5 10.5h7'/>",
+    search: "<circle cx='10.5' cy='10.5' r='6'/><path d='M15 15l5.5 5.5'/>",
+    branch: "<circle cx='6.5' cy='6' r='2.3'/><circle cx='6.5' cy='18' r='2.3'/><circle cx='17.5' cy='12' r='2.3'/><path d='M6.5 8.3v7.4M8.7 6.9c3.7.6 5.9 2.3 7.1 3.6M8.7 17.1c3.7-.6 5.9-2.3 7.1-3.6'/>",
+    spark: "<path d='M12 3.5l2.1 6.4 6.4 2.1-6.4 2.1-2.1 6.4-2.1-6.4L3.5 12l6.4-2.1z'/>",
+    plug: "<path d='M9 3.5v4.5M15 3.5v4.5M6.5 8h11v3.2a5.5 5.5 0 0 1-11 0zM12 16.7v3.8'/>",
+    inbox: "<path d='M4 13.5l2.4-8h11.2l2.4 8V19H4z'/><path d='M4 13.5h4.6l1.2 2.3h4.4l1.2-2.3H20'/>",
+    clip: "<path d='M8.5 4h7v3h-7z'/><path d='M7 5.5H5.5v15h13v-15H17M8.5 12h7M8.5 15.5h4.5'/>",
+    chart: "<path d='M4 20h16M7.5 16.5v-5M12 16.5V7M16.5 16.5v-8'/>",
+    list: "<path d='M9.5 6.5h10M9.5 12h10M9.5 17.5h10M5 6.5h.5M5 12h.5M5 17.5h.5'/>"
   };
   function ico(name) { return "<svg viewBox='0 0 24 24' aria-hidden='true'>" + IC[name] + "</svg>"; }
-  function note(text, side) { return text ? "<em class='gv-note n-" + side + "'>" + esc(text) + "</em>" : ""; }
+  /* anotação à mão, com a seta curva apontando para o bloco: r à direita do bloco, l à esquerda, d em cima */
+  var ARW = {
+    r: "<path d='M56 15C42 5 24 4 8 11'/><path d='M15 5.5L7.5 11.5l8 4'/>",
+    l: "<path d='M4 9c14 10 32 11 48 4'/><path d='M45 7.5l7.5 5.5-8 4'/>",
+    d: "<path d='M14 3c-6 7-7 14-2 20'/><path d='M6.5 17.5l5.5 6 4.5-7'/>"
+  };
+  function note(text, side) {
+    var arw = "<svg class='gv-arw a-" + side + "' viewBox='0 0 " + (side === "d" ? "24 26" : "60 24") + "' aria-hidden='true'>" + ARW[side] + "</svg>";
+    return text ? "<p class='gv-note n-" + side + "'>" + (side === "r" ? arw : "") + "<span>" + esc(text) + "</span>" + (side === "r" ? "" : arw) + "</p>" : "";
+  }
   function dots(list) { return list.map(function (x) { return "<span>" + esc(x) + "</span>"; }).join("<i aria-hidden='true'>·</i>"); }
 
   /* ---------- 1 · Visão geral: a fábrica de agentes; passar o cursor mostra o que cada peça faz ---------- */
@@ -78,63 +100,64 @@
     if (arg === "funcoes") U.aim(document.getElementById("funcoes"));
   }
 
-  /* ---------- 4 · Governança: um painel só, em camadas, da intenção à evidência. Tudo à vista, sem passos ---------- */
+  /* ---------- 4 · Governança: um one pager em camadas, da intenção à evidência. Tudo à vista, sem passos ---------- */
   function governanca() {
     var G = A.gov, row = function (l, m, r, cls) { return "<div class='gv-l'>" + (l || "") + "</div><div class='gv-m" + (cls ? " " + cls : "") + "'>" + m + "</div><div class='gv-r'>" + (r || "") + "</div>"; };
     var link = row("", "<i class='gv-v' aria-hidden='true'></i>", "");
+    function head(icon, t, d, big) { return "<span class='gv-ico" + (big ? " big" : "") + "'>" + ico(icon) + "</span><div><b>" + esc(t) + "</b>" + (d ? "<span>" + esc(d) + "</span>" : "") + "</div>"; }
     view.innerHTML = "<article class='op gov' aria-label='" + esc(G.title) + "'>" +
-      "<header class='op-h'><h1>" + esc(G.title) + "</h1><p class='op-k'>" + esc(G.kicker) + "</p><p class='op-lead'>" + esc(G.lead) + "</p></header>" +
+      "<header class='op-h'><h1>" + esc(G.title) + "</h1><p class='op-k'>" + esc(G.kicker) + "</p></header>" +
       "<div class='gv'>" +
-        row("", "<div class='gv-card c-intent'><span class='gv-ico'>" + ico("target") + "</span><div><b>" + esc(G.intent.t) + "</b><span>" + esc(G.intent.d) + "</span></div></div>", note(G.intent.note, "r")) +
+        row("", "<div class='gv-card c-intent'>" + head("target", G.intent.t, G.intent.d, true) + "</div>", note(G.intent.note, "r")) +
         link +
-        row(note(G.controls.note, "l"), "<div class='gv-card c-controls'><div class='gv-ch'><span class='gv-ico big'>" + ico("shield") + "</span><div><b>" + esc(G.controls.t) + "</b><span>" + esc(G.controls.d) + "</span></div></div>" +
+        row(note(G.controls.note, "l"), "<div class='gv-card c-controls'><div class='gv-ch'>" + head("shield", G.controls.t, G.controls.d, true) + "</div>" +
           "<div class='gv-3'>" + G.controls.groups.map(function (g) {
-            return "<div class='gv-g'><p><span class='gv-ico'>" + ico(g[0] === "id" ? "users" : g[0]) + "</span><b>" + esc(g[1]) + "</b></p><ul>" + g[2].map(function (x) { return "<li>" + esc(x) + "</li>"; }).join("") + "</ul></div>"; }).join("") + "</div></div>", "") +
+            return "<div class='gv-g'><p><span class='gv-ico'>" + ico(g[0] === "id" ? "users" : g[0]) + "</span><b>" + esc(g[1]) + "</b></p><ul>" + g[2].map(function (x) { return "<li>" + esc(x) + "</li>"; }).join("") + "</ul></div>"; }).join("") + "</div>" +
+          "<p class='gv-pins' aria-hidden='true'><i class='p-go'></i><i class='p-stop'></i><i class='p-esc'></i></p></div>", "") +
         row("", "<p class='gv-lab'>" + esc(G.runtime) + "</p><div class='gv-chips'>" + G.chips.map(function (c) {
-            return "<div class='gv-chip c-" + c[0] + "'><span class='gv-dot'>" + ico(c[0]) + "</span><div><small>" + esc(c[1]) + "</small><b>" + esc(c[2]) + "</b><span>" + esc(c[3]) + "</span></div></div>"; }).join("") + "</div>",
+            return "<div class='gv-chip c-" + c[0] + "'><span class='gv-dot'>" + ico(c[0]) + "</span><div><b>" + esc(c[1]) + "</b><span>" + esc(c[2]) + "</span></div></div>"; }).join("") + "</div>",
           note(G.people.note, "d") + "<div class='gv-card c-people'><p><span class='gv-ico'>" + ico("person") + "</span><b>" + esc(G.people.t) + "</b></p><ul>" + G.people.items.map(function (x) { return "<li>" + esc(x) + "</li>"; }).join("") + "</ul></div>", "m-run") +
-        row(note(G.exec.note, "l"), "<div class='gv-card c-exec'><span class='gv-ico big'>" + ico("gear") + "</span><div><b>" + esc(G.exec.t) + "</b><p class='gv-dots'>" + dots(G.exec.parts) + "</p><span>" + esc(G.exec.d) + "</span></div></div>", "") +
+        row(note(G.exec.note, "l"), "<div class='gv-card c-exec'><span class='gv-ico big'>" + ico("gear") + "</span><div><b>" + esc(G.exec.t) + "</b><p class='gv-dots'>" + dots(G.exec.parts) + "</p></div></div>", "") +
         link +
         row("", "<div class='gv-card c-proof'><span class='gv-ico big'>" + ico("proof") + "</span><div><b>" + esc(G.proof.t) + "</b><p class='gv-dots'>" + dots(G.proof.parts) + "</p><strong>→ " + esc(G.proof.end) + "</strong></div></div>", note(G.proof.note, "r")) +
       "</div></article>";
   }
 
-  /* ---------- 5 · Decisão: um painel só, do ponto de partida à escala: o que construir, em que ordem e quem decide ---------- */
+  /* ---------- 5 · Decisão: um one pager no modelo de um blueprint. Contexto, passos 1 a 3 e escala; embaixo, ordem, quem decide e o que a liderança decide ---------- */
   function decisao(arg) {
     var P = A.plan, F = T.functions, n = function (g) { return F.filter(function (f) { return f[5] === g; }).length; };
-    var rungs = T.ladder.map(function (l, i) { return [i + 1, l[0], l[1], l[2], n(P.rungs[i]) + " de " + F.length + " funções"]; }).concat([["+", P.extra[0], P.extra[1], "", "vira ferramenta"]]);
-    function when(w) { return "<small class='" + (w === "agora" ? "w-now" : "") + "'>" + esc(w) + "</small>"; }
-    view.innerHTML = "<article class='op plan' aria-label='" + esc(P.title) + "'>" +
-      "<header class='op-h left'><h1>" + esc(P.title) + "</h1><p class='op-k'>" + esc(P.kicker) + "</p></header>" +
-      "<div class='bp'>" +
-        "<div class='bp-col'>" +
-          "<section class='bp-p'><h2>O ponto de partida</h2><div class='bp-stats'>" + P.stats.map(function (x) {
-            return "<div><b>" + esc(x[0]) + "</b><span><strong>" + esc(x[1]) + "</strong>" + esc(x[2]) + "</span></div>"; }).join("") + "</div><p class='bp-note'>" + esc(P.base) + "</p></section>" +
-          "<section class='bp-p'><h2>Passo 1 · De onde vêm as demandas</h2><div class='bp-3'>" + P.sources.map(function (c) {
-            return "<div class='bp-c'><b>" + esc(c[0]) + "</b><span>" + esc(c[1]) + "</span><p class='bp-tags'>" + c[2].map(function (t) { return "<i>" + esc(t) + "</i>"; }).join("") + "</p></div>"; }).join("") + "</div></section>" +
-          "<section class='bp-p'><h2>Passo 2 · A menor solução que resolve</h2><div class='bp-6'>" + rungs.map(function (r, i) {
-            return "<div class='bp-c" + (i === 4 ? " last" : "") + "'><p class='bp-n'><i>" + esc(r[0]) + "</i>" + (r[3] ? "<small>" + esc(r[3]) + "</small>" : "") + "</p><b>" + esc(r[1]) + "</b><span>" + esc(r[2]) + "</span><em>" + esc(r[4]) + "</em></div>"; }).join("") + "</div></section>" +
-        "</div>" +
-        "<div class='bp-col'>" +
-          "<section class='bp-p' id='construir'><h2>Passo 3 · Priorização: retorno × esforço</h2><div class='bp-mx'>" +
-            "<p class='bp-ax y'><span>Baixo</span><b>Retorno</b><span>Alto</span></p><div class='bp-q'>" + A.matrix.map(function (q) {
-              return "<div class='q-" + q[0] + "'><small>" + esc(q[4]) + "</small><b>" + esc(q[2]) + "</b><span>" + esc(q[3]) + "</span><em>" + esc(q[1]) + "</em></div>"; }).join("") + "</div>" +
-            "<p class='bp-ax x'><span>Baixo</span><b>Esforço</b><span>Alto</span></p></div>" +
-            "<p class='bp-note'><b>Critério proposto, para a liderança validar.</b> " + esc(A.risk) + "</p></section>" +
-          "<section class='bp-p'><h2>Escalar com governança</h2><div class='bp-2'>" +
-            "<div class='bp-sub'><b>Da demanda à fila</b><ol class='bp-flow'>" + P.flow.map(function (x, i) { return "<li" + (i === P.flow.length - 1 ? " class='end'" : "") + ">" + esc(x) + "</li>"; }).join("") + "</ol><span>" + esc(P.flowNote) + "</span></div>" +
-            "<div class='bp-sub'><b>Um ciclo repetível para cada agente</b><ol class='bp-cycle'>" + T.build.map(function (x, i) { return "<li><i>" + (i + 1) + "</i><span>" + esc(x[0]) + "</span></li>"; }).join("") + "</ol><span>" + esc(P.cycleNote) + "</span></div>" +
-          "</div></section>" +
-        "</div>" +
-        "<section class='bp-p bp-wide' id='ordem'><h2>Passo 4 · Em que ordem: cinco fases, cada uma com critério de saída</h2><ol class='order'>" + D.phases.map(function (p) {
-          return "<li><small>" + esc(p.n) + " · " + esc(p.when) + "</small><b>" + esc(p.name) + "</b><span>" + esc(p.goal) + "</span><em>Sai quando</em><span>" + esc(p.gate) + "</span></li>"; }).join("") + "</ol></section>" +
-        "<section class='bp-p bp-wide' id='quem'><h2>Quem decide o quê</h2><div class='bp-who'>" + A.deciders.map(function (r) {
-          return "<div><b>" + esc(r[0]) + "</b><span>" + esc(r[1]) + "</span><small>" + esc(r[2]) + "</small></div>"; }).join("") + "</div></section>" +
-        "<section class='bp-p bp-wide' id='lideranca'><h2>O que a liderança decide agora</h2><div class='bp-asks'>" + A.asks.map(function (g) {
-          return "<div class='card'><h3>" + esc(g[0]) + "</h3><ul>" + g[1].map(function (i) { return "<li><span>" + esc(i[0]) + "</span>" + when(i[1]) + "</li>"; }).join("") + "</ul></div>"; }).join("") + "</div></section>" +
-      "</div></article>";
+    var agents = n("agente"), share = agents / F.length, R = 26, C = 2 * Math.PI * R;
+    function panel(id, title, body) {   /* "Passo 1 · De onde vêm os casos": o passo vira um selo antes do título */
+      var t = title.split(" · ");
+      return "<section class='bx'" + (id ? " id='" + id + "'" : "") + "><h2>" + (t[1] ? "<span class='bx-n'>" + esc(t[0]) + "</span>" + esc(t[1]) : esc(title)) + "</h2>" + body + "</section>"; }
+    var ring = "<div class='bx-ring'><svg viewBox='0 0 64 64' role='img' aria-label='" + agents + " de " + F.length + " funções pedem agente'><circle cx='32' cy='32' r='" + R + "' class='r0'/>" +
+      "<circle cx='32' cy='32' r='" + R + "' class='r1' stroke-dasharray='" + (C * share).toFixed(1) + " " + C.toFixed(1) + "' transform='rotate(-90 32 32)'/>" +
+      "<text x='32' y='36' text-anchor='middle'>" + Math.round(share * 100) + "%</text></svg><span>" + esc(P.ring) + "</span></div>";
+    view.innerHTML = "<article class='op plan' aria-label='" + esc(P.title) + "'><div class='bpx'>" +
+      "<header class='bpx-h'><h1>" + esc(P.title).replace(/^([^:]+:)/, "<em>$1</em>") + "</h1></header>" +
+      "<div class='bpx-g'><div class='bpx-col'>" +
+        panel("", "O ponto de partida", "<div class='bx-ctx'>" + P.stats.map(function (x) {
+          return "<div class='bx-st'><b>" + esc(x[0]) + "</b><span><strong>" + esc(x[1]) + "</strong>" + esc(x[2]) + "</span></div>"; }).join("") + ring + "</div>") +
+        panel("", "Passo 1 · De onde vêm os casos", "<div class='bx-3'>" + P.sources.map(function (c) {
+          return "<div class='bxc'><p class='bxc-h'><span class='bx-ic'>" + ico(c[0]) + "</span><b>" + esc(c[1]) + "</b></p><p class='bx-tags'>" + c[2].map(function (t) { return "<i>" + esc(t) + "</i>"; }).join("") + "</p><span>" + esc(c[3]) + "</span></div>"; }).join("") + "</div>") +
+        panel("", "Passo 2 · A menor solução que resolve", "<div class='bx-6'>" + P.rungs.map(function (r, i) {
+          return "<div class='bxr" + (r[3] === "agente" ? " hot" : "") + "'><span class='bx-sq'>" + ico(r[0]) + "</span><div><b>" + esc(r[1]) + "</b><span>" + esc(r[2]) + "</span><em>" + (r[3] ? n(r[3]) + " de " + F.length + " funções" : "para todos") + "</em></div></div>"; }).join("") + "</div>") +
+      "</div><div class='bpx-col'>" +
+        panel("construir", "Passo 3 · Priorização: retorno × esforço", "<div class='bx-mx'><p class='bx-ax y'><span>Baixo</span><b>Retorno</b><span>Alto</span></p><div class='bx-q'>" + A.matrix.map(function (q) {
+            return "<div class='q-" + q[0] + "'><b>" + esc(q[2]) + "</b><small>" + esc(q[4]) + "</small><span>" + esc(q[3]) + "</span></div>"; }).join("") + "</div>" +
+          "<p class='bx-ax x'><span>Baixo</span><b>Esforço</b><span>Alto</span></p></div><p class='bx-note'>" + esc(A.risk) + "</p>") +
+        panel("", "Escalar com governança", "<div class='bx-2'>" +
+          "<div class='bxs'><b>Da demanda à fila</b><ol class='bx-flow'>" + P.flow.map(function (x) { return "<li><span class='bx-sq'>" + ico(x[0]) + "</span><small>" + esc(x[1]) + "</small></li>"; }).join("") + "</ol><span>" + esc(P.flowNote) + "</span></div>" +
+          "<div class='bxs'><b>Um ciclo repetível</b><ol class='bx-cycle'>" + P.cycle.map(function (x, i) { return "<li><i>" + (i + 1) + "</i><small>" + esc(x) + "</small></li>"; }).join("") + "</ol><span>" + esc(P.cycleNote) + "</span></div>" +
+        "</div>") +
+      "</div></div>" +
+      "<div class='bpx-row'>" +
+        panel("ordem", "Em que ordem", "<ol class='bx-ph'>" + D.phases.map(function (p, k) { return "<li" + (k === 2 ? " class='now'" : "") + "><i>F" + k + "</i><b>" + esc(p.name) + "</b><small>" + esc(p.when) + "</small>" + (k === 2 ? "<em>" + esc(P.ide) + "</em>" : "") + "</li>"; }).join("") + "</ol>") +
+        panel("quem", "Quem decide", "<ul class='bx-kv'>" + P.who.map(function (r) { return "<li><span>" + esc(r[0]) + "</span><b>" + esc(r[1]) + "</b></li>"; }).join("") + "</ul>") +
+        panel("lideranca", "A liderança decide agora", "<ul class='bx-kv asks'>" + P.asks.map(function (r) { return "<li><span>" + esc(r[0]) + "</span><b>" + esc(r[1]) + "</b></li>"; }).join("") + "</ul>") +
+      "</div></div></article>";
     var to = arg && document.getElementById(arg);
-    if (to && /^(construir|ordem|quem|lideranca)$/.test(arg)) U.aim(to);   /* #decisao/quem abre direto na tabela */
+    if (to && /^(construir|ordem|quem|lideranca)$/.test(arg)) U.aim(to);   /* #decisao/quem abre direto no bloco */
   }
 
   U.shell({

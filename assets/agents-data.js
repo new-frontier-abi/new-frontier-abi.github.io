@@ -123,100 +123,66 @@ window.AG = (function () {
       ["Um mundo de teste", "ServiceNow, Hub, repositório e modelo simulados. O código que roda no teste é o de produção."]
     ],
 
-    /* ---------- 4 · Governança: um painel só, em camadas, da intenção à evidência ---------- */
+    /* ---------- 4 · Governança: um one pager em camadas, da intenção à evidência. Frases curtas: o desenho conta o resto ---------- */
     gov: {
-      title: "Camadas de governança da plataforma",
+      title: "Camadas de governança",
       kicker: "Da intenção à prestação de contas",
-      lead: "Valem para toda automação e todo agente, de qualquer área da companhia. A regra é aplicada pela plataforma, no servidor, e não por quem executa.",
-      intent: { t: "Intenção do dono", d: "O que a automação ou o agente resolve, o risco aceito e quem para. Fica no manifesto, antes de rodar.", note: "O que a área quer" },
-      controls: { t: "Controles de governança", d: "Regras, limites e permissões que a plataforma aplica a cada automação e a cada agente.", note: "Define os limites",
+      intent: { t: "Intenção do negócio", d: "Objetivo, ganho medido, risco aceito e um dono", note: "O que a área quer" },
+      controls: { t: "Controles de governança", d: "Regras, limites e permissões, aplicados pela plataforma", note: "Define os limites",
         groups: [
-          ["id", "Identidade e autorização", ["Uma identidade por serviço, por domínio e por agente", "As ferramentas agem com as permissões de quem pede", "Quem cria agentes: um grupo por área (Fase 2)"]],
-          ["rule", "Políticas e condições", ["Risco no manifesto: verde, amarelo ou vermelho", "Agente sem decisão registrada e sem avaliação não entra", "Limites de iterações, tempo e custo por execução"]],
-          ["tool", "Ferramentas e capacidades", ["Lista fechada por agente, começando por leitura", "Cada ferramenta tem uma cor, conferida no servidor", "Quem chama cada automação: lista aceita pelo dono"]]
+          ["id", "Identidade e autorização", ["Quem pode criar, por área", "Uma identidade por agente", "Só os papéis da lista"]],
+          ["rule", "Políticas e condições", ["Decisão registrada", "Avaliação antes do uso", "Limite de tempo e de custo"]],
+          ["tool", "Ferramentas e capacidades", ["Lista fechada, leitura primeiro", "Uma cor por ferramenta", "Automação só com aceite do dono"]]
         ] },
       runtime: "Decisão na execução",
-      /* [classe, cor, decisão, o que acontece] */
-      chips: [
-        ["go", "Verde", "Segue", "Dentro da regra, com auditoria"],
-        ["stop", "Vermelho", "Bloqueia", "Recusa; acesso só por pedido"],
-        ["esc", "Amarelo", "Escala", "Espera aprovação ou revisão"]
-      ],
-      people: { t: "Supervisão humana", items: ["Aprova entregas e execuções em espera", "Pausa agentes e cancela execuções", "Promove e concede acesso: sempre uma pessoa"], note: "Pessoas no controle" },
-      exec: { t: "Execução na plataforma", parts: ["Runtime dos agentes", "Sistemas de cada área", "Automation Hub", "ServiceNow"], d: "O Automation Hub e o ServiceNow entram como complementos. Agente novo roda primeiro em sombra.", note: "Executa com os controles" },
-      proof: { t: "Evidência verificável", parts: ["Cada execução", "Cada chamada de ferramenta", "Quem pediu", "Cor", "Desfecho", "Custo"], end: "Auditoria e rastreabilidade", note: "Prova do que aconteceu" }
+      /* [classe, decisão, quando] */
+      chips: [["go", "Segue", "Verde · dentro da regra"], ["stop", "Bloqueia", "Vermelho · fora da regra"], ["esc", "Escala", "Amarelo · pede revisão"]],
+      people: { t: "Supervisão humana", items: ["Aprova e promove", "Trata as exceções", "Pausa e intervém"], note: "Pessoas no controle" },
+      exec: { t: "Execução", parts: ["Agentes", "Sistemas das áreas", "Automation Hub", "ServiceNow"], note: "Executa com os controles" },
+      proof: { t: "Evidência verificável", parts: ["Cada chamada", "Quem pediu", "Ferramenta", "Cor", "Desfecho", "Quando"], end: "Auditoria e rastreabilidade", note: "Prova do que aconteceu" }
     },
 
-    /* ---------- 5 · Decisão: um painel só, do contexto à escala ---------- */
+    /* ---------- 5 · Decisão: um one pager, no modelo de um blueprint: contexto, passos 1 a 3, escala e, embaixo, ordem, quem decide e o que a liderança decide ---------- */
     plan: {
-      title: "Como escolhemos e escalamos agentes em todas as áreas",
-      kicker: "O que construir, em que ordem e quem decide",
-      /* o ponto de partida: [número, o quê, de onde vem]. Contagens do próprio site, nenhuma de ganho */
-      stats: [
-        ["46", "funções mapeadas no DW", "o primeiro mapa; cada área faz o seu"],
-        ["11", "pedem um agente", "o resto é código, chamada de modelo ou busca"],
-        ["7", "agentes do DW", "nas Fases 2 a 4, sempre com uma pessoa no fim"],
-        ["10", "primeiras automações", "na Fase 1, com API e baixo risco"]
-      ],
-      base: "Nenhum número de ganho: a linha de base é medida na Fase 0, e as metas saem dela.",
-      /* passo 1: [título, o que é, marcas] */
+      title: "Blueprint: identificar e escalar agentes em todas as áreas",
+      /* o ponto de partida: [número, o quê, de onde]. Contagens do próprio site; nenhuma de ganho */
+      stats: [["46", "Funções mapeadas", "no DW, o primeiro mapa"], ["11", "Pedem um agente", "o resto é código, modelo ou busca"], ["7", "Agentes do DW", "nas Fases 2 a 4"]],
+      ring: "Só 11 das 46 funções pedem agente: a menor solução vence.",
+      /* passo 1: [ícone, título, marcas, uma frase] */
       sources: [
-        ["Trabalho repetitivo", "Oferta que termina em tarefa manual, triagem e conferência feitas à mão.", ["Pedidos", "Triagem", "Testes"]],
-        ["Saber que mora em poucas pessoas", "Achar o que já existe, o impacto de uma mudança e o padrão certo depende de quem lembra.", ["Reuso", "Impacto", "Padrões"]],
-        ["Ideias das áreas", "Qualquer área abre a demanda pelo ticket de sempre. O Intake estrutura e classifica.", ["Intake", "ROI", "IDE"]]
+        ["repeat", "Trabalho repetitivo", ["Pedidos", "Triagem", "Testes"], "Tarefa manual que se repete vira automação."],
+        ["key", "Saber que mora em poucos", ["Reuso", "Impacto", "Padrões"], "O que depende de quem lembra vira ferramenta."],
+        ["bulb", "Ideias de todas as áreas", ["Intake", "ROI", "IDE"], "Qualquer área abre a demanda; o Intake estrutura."]
       ],
-      /* passo 2: o grupo do catálogo de funções que conta cada degrau da escada (TEAM.ladder) */
-      rungs: ["plataforma", "modelo", "busca", "hibrido", "agente"],
-      extra: ["Integração nova", "Faltou ferramenta: vira automação do catálogo e passa a servir a todos os agentes e às IDEs."],
-      flow: ["Demanda", "Intake", "ROI", "Fila", "Dono decide"],
-      flowNote: "O retorno é medido com dados reais (hoje, volume e tempo do ServiceNow), e a conta é feita em código. Se já existe automação, a resposta é reaproveitar.",
-      cycleNote: "Os mesmos oito passos em qualquer área. Sem avaliação, o agente não vai para uso real."
+      /* passo 2: [ícone, solução, quando, grupo do catálogo de funções que a conta] */
+      rungs: [
+        ["code", "Código", "Regra fixa, com teste", "plataforma"],
+        ["chat", "Chamada de modelo", "Um passo: classificar, resumir", "modelo"],
+        ["search", "Busca em fontes", "A resposta vem de documento", "busca"],
+        ["branch", "Pipeline híbrido", "Regra primeiro, modelo no resto", "hibrido"],
+        ["spark", "Agente", "Ferramentas e passos que mudam", "agente"],
+        ["plug", "Integração nova", "Vira automação e ferramenta", ""]
+      ],
+      flow: [["inbox", "Demanda"], ["clip", "Intake"], ["chart", "ROI"], ["list", "Fila"], ["person", "Dono"]],
+      flowNote: "Retorno medido com dados reais; a conta é feita em código.",
+      cycle: ["Decisão", "Contrato", "Ferramentas", "Avaliação", "Runtime", "Sombra", "Aprovação", "Medição"],
+      cycleNote: "Os mesmos oito passos em qualquer área.",
+      ide: "Criação pela IDE",   /* o selo da Fase 2 em "Em que ordem" */
+      /* quem decide: [decisão, quem] */
+      who: [["Entra na fila", "Dono do produto e área"], ["Código, modelo ou agente", "Quem constrói"], ["Pull request", "Plataforma e área"], ["Agente chama automação", "Dono da automação"],
+        ["Sai da sombra", "Dono do agente"], ["Produção no ServiceNow", "Time do ServiceNow"], ["Acesso sensível", "Dono do recurso"], ["Passar de fase", "Liderança"]],
+      /* a liderança decide agora: [o quê, quando] */
+      asks: [["Ambiente de dev, identidade e gateway", "Fase 0"], ["Asimov por ambiente, com cota", "Fase 0"], ["Sub-produção do ServiceNow", "Fase 0"],
+        ["Lista priorizada, um dono por item", "Fase 1"], ["Áreas que começam e quem cria", "Fase 2"]]
     },
 
     /* retorno × esforço: [classe, posição, nome, regra, chamada] */
     matrix: [
-      ["now", "Retorno alto · esforço baixo", "Agora", "Entra na próxima onda. Na Fase 1, é o critério das 10 primeiras automações: API e baixo risco.", "Prioridade imediata"],
-      ["plan", "Retorno alto · esforço alto", "Projeto", "Vira plano, com a proposta de arquitetura, marcos e um dono.", "Transformação planejada"],
-      ["own", "Retorno baixo · esforço baixo", "Com a própria área", "Um dev da área cria pela IDE, a partir da Fase 2, com os mesmos gates.", "Autoatendimento"],
-      ["wait", "Retorno baixo · esforço alto", "Não agora", "Fica registrado, com o motivo, e volta à fila se os números mudarem.", "Despriorizar"]
+      ["now", "Retorno alto · esforço baixo", "Agora", "API e baixo risco primeiro.", "Prioridade imediata"],
+      ["plan", "Retorno alto · esforço alto", "Projeto", "Arquitetura, marcos e um dono.", "Transformação planejada"],
+      ["own", "Retorno baixo · esforço baixo", "A própria área", "O dev da área cria pela IDE (Fase 2).", "Autoatendimento"],
+      ["wait", "Retorno baixo · esforço alto", "Não agora", "Registra o motivo; volta se mudar.", "Despriorizar"]
     ],
-    risk: "Todo agente começa em sombra. Ferramenta amarela só em sub-produção, com change request; vermelha nunca age direto.",
-    /* [decisão, quem decide, com o quê] */
-    deciders: [
-      ["Uma demanda entra, e em que ordem", "Dono do produto, com o dono da área", "O caso de negócio, com a origem de cada número"],
-      ["Código, chamada de modelo ou agente", "Quem constrói; desvio de padrão vai ao arquiteto", "A decisão registrada no manifesto"],
-      ["Quem pode criar agentes em uma área", "Liderança, área por área", "Um grupo de quem pode criar, por área (Fase 2)"],
-      ["Uma fonte entra na busca", "Uma pessoa, nunca o modelo", "A lista de fontes aprovadas"],
-      ["Um pull request entra", "Revisor da plataforma; na Fase 2, também o dono da área", "Os gates da esteira: manifesto, testes e avaliação"],
-      ["Um agente pode chamar uma automação", "O dono da automação", "A lista de quem chama, no manifesto da automação"],
-      ["Um agente sai da sombra", "O dono do agente", "A aceitação medida em sombra"],
-      ["Configuração em produção no ServiceNow", "O time do ServiceNow", "O processo de mudança de hoje"],
-      ["Um acesso sensível", "O dono do recurso", "A aprovação no ServiceNow"],
-      ["Reprocessar uma execução", "O plantão", "O diagnóstico do agente de Operação"],
-      ["Parar um agente", "Quem tem o papel de operar os agentes", "A pausa, que vale na próxima chamada"],
-      ["Passar de fase", "A liderança", "O critério de saída de cada fase"]
-    ],
-    /* o que a liderança decide agora: [quando, [[decisão, marca]]] */
-    asks: [
-      ["Agora, na Fase 0", [
-        ["Aprovar o ambiente de dev, pequeno e descrito em código", "agora"],
-        ["Liberar os pedidos de identidade e de gateway, os de maior prazo", "agora"],
-        ["Acesso ao Asimov por ambiente, com modelos aprovados e cota", "agora"],
-        ["Uma instância de sub-produção do ServiceNow para os testes", "agora"]
-      ]],
-      ["Para a Fase 1", [
-        ["A lista priorizada de automações, com um dono de negócio por automação", "Fase 0 em diante"],
-        ["Um desenvolvedor do ServiceNow, em tempo parcial", "Fases 1 a 4"]
-      ]],
-      ["Para a Fase 2", [
-        ["Quais áreas começam a criar agentes", "Fase 2"],
-        ["Um dono em cada área, que responde pelos agentes dela", "Fase 2"],
-        ["Quem pode criar agentes em cada área: um grupo por área", "Fase 2"]
-      ]],
-      ["A cada fase", [
-        ["Passar de fase quando o critério de saída for atingido", "cada fase"],
-        ["Remanejar a capacidade liberada pelos indicadores, não pelo calendário", "cada fase"]
-      ]]
-    ]
+    risk: "Critério proposto, para a liderança validar. Todo agente começa em sombra."
   };
 })();
