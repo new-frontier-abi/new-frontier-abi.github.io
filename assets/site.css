@@ -1,5 +1,5 @@
 /* DW Automation Platform. A identidade vem do logo do Digital Workplace: preto e amarelo, traço único, nós em círculo.
-   Dois temas com a mesma paleta: branco por padrão, escuro por escolha. Três páginas com o mesmo cabeçalho; o conteúdo vem dos arquivos de dados em assets/.
+   Dois temas com a mesma paleta: branco por padrão, escuro por escolha. Quatro páginas com o mesmo cabeçalho; o conteúdo vem dos arquivos de dados em assets/.
    Regra de cor: o amarelo marca o agora (o passo atual, o botão de avançar); o preto marca o que está escolhido; o resto é neutro. */
 @font-face{font-family:"Manrope";src:url("fonts/manrope.woff2") format("woff2");font-weight:200 800;font-style:normal;font-display:swap;
   unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+2000-206F,U+20AC,U+2122,U+2212,U+2215,U+FEFF,U+FFFD}
@@ -42,7 +42,7 @@ h1,h2,h3,p{margin:0}
 
 /* cabeçalho: marca, páginas, seções e tema em uma linha só, que acompanha a rolagem */
 .top{position:sticky;top:0;z-index:30;background:var(--bg);border-bottom:1px solid var(--line)}
-.top-in{display:flex;flex-wrap:wrap;align-items:center;gap:0 20px;min-height:58px}
+.top-in{display:flex;flex-wrap:wrap;align-items:center;gap:0 14px;min-height:58px}
 .brand{display:flex;align-items:center;gap:13px;color:var(--ink);text-decoration:none;flex:none}
 .logo{display:block;height:27px;width:auto;overflow:visible}
 :root[data-theme="dark"] .logo{color:var(--amber)}
@@ -50,12 +50,12 @@ h1,h2,h3,p{margin:0}
 .brand-t b{font-size:15px;font-weight:800;letter-spacing:-.01em}
 .brand-t small{font-size:11.5px;font-weight:600;color:var(--muted)}
 .pages{display:flex;flex:none;gap:2px;padding:3px;border-radius:var(--r-pill);background:var(--faint)}
-.pages a{color:var(--muted);text-decoration:none;font-weight:700;font-size:13.5px;line-height:1.3;padding:6px 14px;border-radius:var(--r-pill);white-space:nowrap;transition:color .12s,background .12s}
+.pages a{color:var(--muted);text-decoration:none;font-weight:700;font-size:13.5px;line-height:1.3;padding:6px 12px;border-radius:var(--r-pill);white-space:nowrap;transition:color .12s,background .12s}
 .pages a:hover{color:var(--ink)}
 .pages a[aria-current="page"]{background:var(--on);color:var(--on-ink)}
-.tabs{display:flex;flex:1;min-width:0;gap:2px;align-self:stretch;overflow-x:auto;scrollbar-width:none;padding-left:18px;border-left:1px solid var(--line)}
+.tabs{display:flex;flex:1;min-width:0;gap:2px;align-self:stretch;overflow-x:auto;scrollbar-width:none;padding-left:14px;border-left:1px solid var(--line)}
 .tabs::-webkit-scrollbar{display:none}
-.tab{appearance:none;border:0;background:none;color:var(--muted);font-weight:700;font-size:14px;padding:0 10px;box-shadow:inset 0 -3px 0 transparent;cursor:pointer;white-space:nowrap;display:flex;align-items:center;gap:8px;transition:color .12s}
+.tab{appearance:none;border:0;background:none;color:var(--muted);font-weight:700;font-size:14px;padding:0 8px;box-shadow:inset 0 -3px 0 transparent;cursor:pointer;white-space:nowrap;display:flex;align-items:center;gap:8px;transition:color .12s}
 .tab:hover{color:var(--ink)}
 .tab i{flex:none;display:grid;place-items:center;width:21px;height:21px;border-radius:50%;background:var(--faint);font:600 11px var(--mono);font-style:normal;color:var(--muted)}
 .tab[aria-current="page"]{color:var(--ink);box-shadow:inset 0 -3px 0 var(--amber)}
@@ -83,7 +83,7 @@ main{padding-block:28px 8px;display:grid;gap:20px;grid-template-columns:minmax(0
 .seg{display:flex;flex-wrap:wrap;gap:8px 18px;align-items:center}
 .seg-grp{display:flex;flex-wrap:wrap;gap:6px;align-items:center;min-width:0}
 .seg-g{font-size:11.5px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin-right:3px}
-.seg-b{appearance:none;display:inline-flex;align-items:center;gap:7px;border:1px solid var(--line);border-radius:var(--r-pill);background:var(--card);color:var(--ink);font-weight:700;font-size:13.5px;line-height:1.2;padding:8px 13px;cursor:pointer;white-space:nowrap;transition:background .12s,border-color .12s,color .12s}
+.seg-b{appearance:none;display:inline-flex;align-items:center;gap:7px;border:1px solid var(--line);border-radius:var(--r-pill);background:var(--card);color:var(--ink);font-weight:700;font-size:13.5px;line-height:1.2;padding:8px 13px;cursor:pointer;white-space:nowrap;text-decoration:none;transition:background .12s,border-color .12s,color .12s}
 .seg-b:hover{border-color:var(--ink)}
 .seg-b[aria-pressed="true"]{background:var(--on);border-color:var(--on);color:var(--on-ink)}
 .seg-b i{font:600 10.5px var(--mono);font-style:normal;color:var(--muted)}
@@ -369,6 +369,28 @@ td.was{color:var(--muted)} td.nb{white-space:nowrap}
 .stepper li{border:1px solid var(--line);border-radius:var(--r-s);background:var(--card);padding:12px 14px 14px;display:grid;gap:2px;align-content:start}
 .stepper small{font:600 11.5px var(--mono);color:var(--amber-ink)}
 .stepper b{font-size:15px;font-weight:800} .stepper span{font-size:13.5px;color:var(--muted)}
+.cards.n2{grid-template-columns:repeat(2,minmax(0,1fr))}
+
+/* página Agentes: retorno e esforço em quatro quadrantes, e as fases em ordem, cada uma com o critério de saída */
+.mx{display:grid;grid-template-columns:20px minmax(0,1fr);gap:8px 10px}
+.mx-y,.mx-x{font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);white-space:nowrap}
+.mx-y{writing-mode:vertical-rl;transform:rotate(180deg);align-self:center;justify-self:center}
+.mx-x{grid-column:2;justify-self:end}
+.mx-g{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.mx-q{border:1px solid var(--line);border-radius:var(--r);background:var(--card);padding:14px 16px 16px;display:grid;gap:4px;align-content:start}
+.mx-q small{font-size:10.5px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:var(--muted)}
+.mx-q b{font-size:17px;font-weight:800;letter-spacing:-.015em}
+.mx-q span{font-size:14.5px;color:var(--muted)}
+.mx-q.q-now{background:var(--amber-soft);border-color:var(--amber);box-shadow:inset 0 3px 0 var(--amber)}
+.mx-q.q-now small{color:var(--amber-ink)}
+.mx-q.q-plan{box-shadow:inset 0 3px 0 var(--ink)}
+.mx-q.q-wait{border-style:dashed;border-color:var(--ghost);background:none}
+.order{list-style:none;margin:0;padding:0;display:grid;gap:6px;grid-template-columns:repeat(5,minmax(0,1fr))}
+.order li{border:1px solid var(--line);border-radius:var(--r-s);background:var(--card);padding:12px 14px 14px;display:grid;gap:3px;align-content:start}
+.order small{font:600 11.5px var(--mono);color:var(--amber-ink)}
+.order b{font-size:15px;font-weight:800}
+.order span{font-size:13.5px;color:var(--muted)}
+.order em{font-style:normal;font-size:10.5px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:var(--ink);margin-top:6px;padding-top:8px;border-top:1px solid var(--faint)}
 
 /* tela cheia: vai o palco e, quando existe, o menu ou a linha do tempo acima dele. O desenho ocupa a altura toda; o quadro rola por dentro. */
 .part:fullscreen,.work:fullscreen{background:var(--bg);padding:20px 24px;overflow:hidden}
@@ -419,6 +441,7 @@ td.was{color:var(--muted)} td.nb{white-space:nowrap}
 .nd.act .box{fill:var(--amber);stroke:#141413;stroke-width:2.2}
 .nd.act .t,.nd.act .s,.nd.act .pt{fill:#141413} .nd.act .ico{stroke:#141413} .nd.act.core .ico{fill:#141413;stroke:none} .nd.act .acc{fill:#141413}
 .nd.swap .s{fill:var(--amber-ink);font-weight:800} .nd.act.swap .s{fill:#141413}
+.nd.go:not(.act):not(.ghost) .acc{fill:var(--go)} .nd.stop:not(.act):not(.ghost) .acc{fill:var(--stop)}   /* as cores do semáforo, no mapa da governança */
 .nd.new .box{fill:var(--amber-soft);stroke:var(--amber);stroke-width:2.4}
 .nd.new .s{fill:var(--amber-ink);font-weight:800}
 .nd.ghost .box{fill:none;stroke:var(--ghost);stroke-width:1.2;stroke-dasharray:5 4}
@@ -474,9 +497,9 @@ td.was{color:var(--muted)} td.nb{white-space:nowrap}
 .sq-row.next .sq-hop,.sq-row.next .sq-stop,.sq-row.next .sq-l{opacity:.45}
 @media (prefers-reduced-motion:reduce){ .sq-row.cur .sq-hop.run,.nd.pop,.nd.pulse .box,.prog button.cur.run:after{animation:none} .nd,.zone,.zone-l,.ed{transition:none} }
 
-/* larguras: abaixo de 1420 px a marca fica só com o logo; abaixo de 1220, as seções descem para uma segunda linha */
+/* larguras: abaixo de 1420 px a marca fica só com o logo; abaixo de 1260, as seções descem para uma segunda linha */
 @media (max-width:1420px){ .brand-t{display:none} }
-@media (max-width:1220px){
+@media (max-width:1260px){
   .top-in{gap:0 12px;padding-top:8px}
   .brand{margin-right:auto}
   .tabs{order:5;flex-basis:100%;border-left:0;padding-left:0;margin-inline:-10px;min-height:42px}
@@ -485,7 +508,7 @@ td.was{color:var(--muted)} td.nb{white-space:nowrap}
 @media (max-width:1365px){ .work{grid-template-columns:minmax(0,1fr)} .side{position:static;max-height:none;overflow:visible} }
 /* quando os controles não cabem ao lado do texto do passo, eles vão para cima dele: a altura do texto não mexe no lugar dos botões */
 @media (max-width:932px){ .stage.play .ctl{order:-1;flex:1 1 100%} }
-@media (max-width:1000px){ .stepper,.cards,.cols.n6{grid-template-columns:repeat(2,minmax(0,1fr))} .ac{grid-column:span 6} .ac.wide{grid-column:1/-1} }
+@media (max-width:1000px){ .stepper,.cards,.cols.n6{grid-template-columns:repeat(2,minmax(0,1fr))} .ac{grid-column:span 6} .ac.wide{grid-column:1/-1} .order{grid-template-columns:minmax(0,1fr)} }
 @media (max-width:760px){
   .top{position:static}
   .stage-head{top:0}
@@ -493,6 +516,8 @@ td.was{color:var(--muted)} td.nb{white-space:nowrap}
   .rhead{display:none}
   .rstep{grid-template-columns:30px minmax(0,1fr)} .rstep p,.rstep .tagc{grid-column:2}
   .ladder,.sem{grid-template-columns:minmax(0,1fr)}
+  .tabs{flex-wrap:wrap;overflow:visible;min-height:0}   /* no telefone, as seções quebram em linhas: nenhuma fica escondida */
+  .tab{height:40px}
   .ac,.ac.wide{grid-column:1/-1}
   .ac.wide .fld li{grid-template-columns:minmax(0,1fr);padding:8px 0}
   .board{padding:12px}
@@ -510,7 +535,8 @@ td.was{color:var(--muted)} td.nb{white-space:nowrap}
     linear-gradient(to left,rgba(10,10,10,.22),transparent) right center/12px 100% no-repeat scroll,var(--canvas)}
 }
 @media (max-width:640px){
-  .cards,.cols.n6,.jumps{grid-template-columns:minmax(0,1fr)}
+  .cards,.cards.n2,.cols.n6,.jumps{grid-template-columns:minmax(0,1fr)}
+  .mx{grid-template-columns:minmax(0,1fr)} .mx-y,.mx-x{display:none} .mx-g{grid-template-columns:minmax(0,1fr)}
   .pager{flex-direction:column} .pg,.pg.nx{min-width:0;width:100%;margin-left:0}
   /* tabela vira lista: uma linha por bloco, o nome da coluna antes de cada valor */
   .tscroll table,.tscroll tbody,.tscroll tr,.tscroll td{display:block}
@@ -521,4 +547,7 @@ td.was{color:var(--muted)} td.nb{white-space:nowrap}
   .tscroll td:not(:first-child){margin-top:6px}
   .tscroll td:not(:first-child):before{content:attr(data-th);display:block;font-size:10.5px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:var(--muted)}
 }
-@media (max-width:520px){ .tl-b span{display:none} .tl-b b{letter-spacing:.02em} .pages{flex:1} .pages a{flex:1;text-align:center} .brand{margin-right:0} .top-in{gap:8px 10px} }
+@media (max-width:600px){ .pages{order:4;flex:1 1 100%;margin-bottom:4px} .pages a{flex:1 1 auto;text-align:center;padding-inline:6px} }   /* as quatro páginas ganham uma linha só delas */
+@media (max-width:520px){ .tl-b span{display:none} .tl-b b{letter-spacing:.02em} .top-in{gap:8px 10px} }
+@media (max-width:400px){ .pages a{padding-inline:4px;font-size:13px} .tab{padding-inline:6px;gap:6px} }
+@media (max-width:340px){ .pages a{padding-inline:2px;font-size:12px} }

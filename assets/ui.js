@@ -1,11 +1,11 @@
-/* Peças comuns às três páginas: navegação, palco, controles, menus de troca, fluxos sobre o mapa e catálogo de funções.
+/* Peças comuns às quatro páginas: navegação, palco, controles, menus de troca, fluxos sobre o mapa e catálogo de funções.
    Cada página monta as próprias telas com estas peças e com o mapa de assets/map.js.
    Regra dos controles: nada muda de lugar enquanto a pessoa avança. A página nunca rola sozinha, e os botões têm tamanho fixo. */
 (function () {
   "use strict";
   var DW = (window.DW = window.DW || {}), U = (DW.ui = {});
   var view = document.getElementById("view"), nav = document.getElementById("nav");
-  var PAGES = [["plataforma", "Plataforma", ""], ["automacoes", "Automações", "automacoes/"], ["servicenow", "ServiceNow", "servicenow/"]];
+  var PAGES = [["agentes", "Agentes", ""], ["plataforma", "Plataforma", "plataforma/"], ["automacoes", "Automações", "automacoes/"], ["servicenow", "ServiceNow", "servicenow/"]];
 
   U.esc = function (s) { return String(s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); };
   U.byId = function (list, id) { return list.filter(function (x) { return x.id === id; })[0]; };
@@ -578,7 +578,7 @@
 
   /* ---------- navegação: páginas e seções no cabeçalho, que acompanha a rolagem; no fim de cada tela, a anterior e a próxima.
      O endereço é #seção ou #seção/exemplo, e o botão de voltar do navegador anda pelas seções. ---------- */
-  /* cfg: { page, base, tabs: [[id, rótulo]], views: {id: fn(arg)} } */
+  /* cfg: { page, base, tabs: [[id, rótulo]], views: {id: fn(arg)}, moved(seção, exemplo): o endereço novo de uma seção que mudou de lugar, ou nada } */
   U.shell = function (cfg) {
     var here = PAGES.map(function (p) { return p[0]; }).indexOf(cfg.page);
     document.getElementById("pages").innerHTML = PAGES.map(function (p) {
@@ -616,7 +616,7 @@
     function current() { var t = nav.querySelector("[aria-current]"); return t && t.getAttribute("data-tab"); }
     nav.addEventListener("click", function (ev) { var b = ev.target.closest("[data-tab]"); if (b) show(b.getAttribute("data-tab"), null, { push: true }); });
     view.addEventListener("click", function (ev) { var b = ev.target.closest("[data-go]"); if (!b) return; if (b.tagName === "A") ev.preventDefault(); show(b.getAttribute("data-go"), b.getAttribute("data-arg"), { push: true }); });
-    document.querySelector(".brand").addEventListener("click", function (ev) { if (cfg.page === "plataforma") { ev.preventDefault(); show(cfg.tabs[0][0], null, { push: true }); } });
+    document.querySelector(".brand").addEventListener("click", function (ev) { if (cfg.page === PAGES[0][0]) { ev.preventDefault(); show(cfg.tabs[0][0], null, { push: true }); } });
     document.addEventListener("keydown", function (ev) {
       if (!comps.length || ev.metaKey || ev.ctrlKey || ev.altKey) return;
       var tag = (ev.target.tagName || "").toLowerCase();
@@ -625,11 +625,20 @@
       var order = listeners();
       for (var k = 0; k < order.length; k++) if (order[k].key && order[k].key(ev.key)) { ev.preventDefault(); return; }
     });
+    /* um endereço de antes, de uma seção que mudou de lugar: na mesma página, só o endereço muda; em outra, a página vai para lá */
+    function moved() {
+      var h = fromHash(), to = cfg.moved ? cfg.moved(h[0], h[1]) : null;
+      if (!to) return false;
+      if (to.charAt(0) !== "#") { location.replace(to); return true; }
+      try { history.replaceState(null, "", to); } catch (e) { /* o endereço fica como está */ }
+      return false;
+    }
     /* voltar e avançar do navegador, um favorito ou um endereço digitado: a tela muda quando a seção ou o exemplo do endereço mudam */
-    window.addEventListener("hashchange", function () { var h = fromHash(); if (cfg.views[h[0]] && (h[0] !== current() || h[1] !== shown)) show(h[0], h[1]); });
+    window.addEventListener("hashchange", function () { if (moved()) return; var h = fromHash(); if (cfg.views[h[0]] && (h[0] !== current() || h[1] !== shown)) show(h[0], h[1]); });
     window.addEventListener("resize", measure);
     /* a primeira tela espera a fonte: os desenhos medem o texto para quebrar as linhas */
-    function start() { var h = fromHash(); show(h[0], h[1], { keep: true }); }
+    function start() { if (moved()) return; var h = fromHash(); show(h[0], h[1], { keep: true }); }
+    if (moved()) return { show: show };   /* outra página: vai já, sem esperar a fonte */
     var fonts = document.fonts && document.fonts.load ? Promise.all([document.fonts.load("700 15px Manrope"), document.fonts.load("500 12px Manrope")]) : Promise.resolve();
     Promise.race([fonts, wait(1000)]).then(start, start);
     return { show: show };

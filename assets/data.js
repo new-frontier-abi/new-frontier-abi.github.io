@@ -1,5 +1,5 @@
-/* Conteúdo da página da plataforma. Um mapa executivo (nodes + edges): pieces, links, scenarios e phases apontam para ele.
-   tech traz os desenhos técnicos, cada um com o próprio mapa.
+/* Conteúdo da página da plataforma, que as outras páginas também usam. Um mapa executivo (nodes + edges): pieces, links, scenarios e phases apontam para ele.
+   tech traz os desenhos técnicos, cada um com o próprio mapa. Os fluxos dos agentes (acts.agentes) aparecem na página Agentes.
    c, r: coluna e linha na grade. h: altura em linhas. p: fase em que nasce (-1 = já existe hoje). */
 window.DW = Object.assign(window.DW || {}, {
   nodes: [
@@ -14,7 +14,7 @@ window.DW = Object.assign(window.DW || {}, {
     { id: "nowapi", t: "ServiceNow",         s: "dados e configuração",      c: 4, r: 1, k: "ext", p: -1 },
     { id: "target", t: "Sistemas alvo",      s: "Entra ID, SAP, outros",     c: 2, r: 2, k: "ext", p: -1 },
     { id: "client", t: "Stellar",            s: "chat interno, para todos",  c: 3, r: 2, k: "ext", p: -1 },
-    { id: "ide",    t: "IDE do time",        s: "o time, pelas ferramentas", c: 4, r: 2, k: "ext", p: 2 },
+    { id: "ide",    t: "IDE do dev",         s: "Claude Code, Codex",        c: 4, r: 2, k: "ext", p: 2 },
     { id: "ci",     t: "DevOps",             s: "pull request e esteira",    c: 3, r: -1, k: "ext", p: 0 },
     { id: "team",   t: "Time DW",            s: "revisa, aprova, decide",    c: 4, r: -1, k: "person", p: -1 }
   ],
@@ -46,7 +46,7 @@ window.DW = Object.assign(window.DW || {}, {
     { id: "hub", name: "Automation Hub", phase: "Fase 1", text: "Catálogo e runtime de automações em Python. Fila, repetição, log e monitoramento vêm da plataforma: a automação só contém a regra de negócio." },
     { id: "eh",  name: "Now Event Hub", phase: "Fase 2", text: "O ServiceNow publica eventos selecionados uma única vez. Cada time assina o que precisa, sem trigger novo." },
     { id: "mcp", name: "ServiceNow MCP", phase: "Fases 2 e 3", text: "O ServiceNow como ferramentas de negócio, com a identidade e as permissões de quem pede. Leitura primeiro; escrita governada depois." },
-    { id: "ag",  name: "Agentes", phase: "Fases 2 a 4", text: "Assumem o trabalho repetitivo de entrega e de operação, usando as outras três peças. Pessoas decidem nos pontos de aprovação." }
+    { id: "ag",  name: "Agentes", phase: "Fases 2 a 4", text: "Assumem o trabalho repetitivo de entrega e de operação, usando as outras três peças. A partir da Fase 2, qualquer operação autorizada cria os próprios agentes pela IDE. Pessoas decidem nos pontos de aprovação." }
   ],
   /* o que está em volta da plataforma no mapa executivo */
   outside: {
@@ -56,7 +56,7 @@ window.DW = Object.assign(window.DW || {}, {
     llm: "O gateway corporativo de modelos. Único caminho dos agentes para um modelo de linguagem.",
     target: "Onde a automação age: Entra ID, SAP e os demais sistemas com API.",
     client: "O chat interno, para todos os funcionários. Hoje atende mais temas de RH, e TI está entrando. Na Fase 4, passa a usar as ferramentas.",
-    ide: "As ferramentas de desenvolvimento do próprio time, como clientes do MCP desde a Fase 2.",
+    ide: "A IDE de quem constrói, em qualquer operação autorizada: Claude Code, Codex ou outra com cliente MCP. Desde a Fase 2, lê a estrutura e cria agentes e integrações.",
     ci: "Repositório, testes e deploy: a esteira de entrega. O pull request de um agente passa pelos mesmos gates de um pull request humano.",
     team: "As pessoas do Digital Workplace nos pontos de decisão: priorizar, revisar, aprovar e promover."
   },
@@ -73,7 +73,7 @@ window.DW = Object.assign(window.DW || {}, {
     { edges: ["hub-target"],       name: "Automation Hub → Sistemas alvo", text: "A automação age no sistema com a credencial do próprio domínio, guardada em cofre." },
     { edges: ["ag-llm"],           name: "Agentes → Asimov",              text: "Toda chamada de modelo passa pelo gateway corporativo. Nenhuma chamada direta a provedor." },
     { edges: ["client-mcp"],       name: "Stellar ↔ ServiceNow MCP",      text: "O chat interno consulta o ServiceNow e aciona automações pelas mesmas ferramentas dos agentes, com a identidade de quem conversa." },
-    { edges: ["ide-mcp"],          name: "IDE do time ↔ ServiceNow MCP",  text: "O próprio time consulta o ServiceNow e o catálogo do Hub pela IDE, cada um com as próprias permissões." },
+    { edges: ["ide-mcp"],          name: "IDE do dev ↔ ServiceNow MCP",   text: "Quem constrói consulta o ServiceNow e o catálogo do Hub pela IDE, com as próprias permissões. É por essa porta que a IDE entende a estrutura antes de criar um agente." },
     { edges: ["ag-ci", "ci-team", "ag-team"], name: "Agentes → Time DW",  text: "Agentes entregam pull request, rascunho ou diagnóstico. Uma pessoa revisa, aprova e decide." }
   ],
   rules: [
@@ -85,10 +85,15 @@ window.DW = Object.assign(window.DW || {}, {
 
   /* para onde seguir, a partir da visão geral: [endereço, para quem, nome, o que tem] */
   site: [
-    ["#autoatendimento", "Para quem decide", "Plataforma", "Esta página: o autoatendimento que prova a ideia, o fluxo de cada agente e as fases."],
-    ["automacoes/", "Para quem constrói", "Automações", "A jornada do time, a base passo a passo, os recursos, os times parceiros e os agentes."],
-    ["servicenow/", "Para o time da instância", "ServiceNow", "Os fluxos de operação e de desenvolvimento, os exemplos, os agentes e as garantias."]
+    ["../", "Para todas as operações", "Agentes", "A página de entrada: como qualquer operação cria agentes pela IDE, os agentes do DW, a governança e as decisões."],
+    ["../automacoes/", "Para quem constrói", "Automações", "A jornada do time, a base passo a passo, os recursos e os times parceiros."],
+    ["../servicenow/", "Para o time da instância", "ServiceNow", "Os fluxos de operação e de desenvolvimento, os exemplos, os agentes da instância e as garantias."]
   ],
+  /* fluxos que estão na página Agentes, e não aqui: [aba, rótulo curto, título]. O critério de saída de cada fase leva até eles. */
+  away: {
+    "c-agente": ["criar", "Agente pela IDE", "Um dev de qualquer operação cria um agente pela IDE"],
+    "c-integracao": ["criar", "Integração nova", "Falta uma ferramenta: a integração vira automação"]
+  },
 
   /* ---------- 2 · Autoatendimento no ServiceNow (POC) ---------- */
   poc: [
@@ -97,7 +102,7 @@ window.DW = Object.assign(window.DW || {}, {
     ["O que a POC prova", ["Oferta nova com automação é configuração do Flow, não integração", "Evento novo é uma linha no registro, não um trigger", "Outros times se servem sem depender de um desenvolvedor do ServiceNow"]]
   ],
 
-  /* ---------- 3 · Agentes ---------- */
+  /* ---------- Agentes do DW: aparecem na página Agentes ---------- */
   agents: [
     ["Intake", "Demanda estruturada e classificada", "2 (piloto)"],
     ["ROI", "Caso de negócio, com a origem de cada número", "2 (piloto)"],
@@ -288,7 +293,7 @@ window.DW = Object.assign(window.DW || {}, {
         nodes: [
           { id: "now",     t: "ServiceNow",       s: "ofertas, flows, eventos",    c: 0, r: 0, k: "ext" },
           { id: "client",  t: "Stellar",          s: "chat interno, para todos",   c: 1, r: 0, k: "ext" },
-          { id: "ide",     t: "IDE do time",      s: "o time, pelo MCP",           c: 2, r: 0, k: "ext" },
+          { id: "ide",     t: "IDE do dev",       s: "devs, pelo MCP",             c: 2, r: 0, k: "ext" },
           { id: "other",   t: "Outros produtos",  s: "API, eventos ou MCP",        c: 3, r: 0, k: "ext" },
           { id: "team",    t: "Time DW",          s: "opera e aprova",             c: 4, r: 0, k: "person" },
           { id: "apim",    t: "API Management",   s: "token, cota, rastreio",      c: 0.5, r: 1, k: "az" },
@@ -431,7 +436,7 @@ window.DW = Object.assign(window.DW || {}, {
       map: {
         nodes: [
           { id: "entra",  t: "Entra ID",         s: "troca o token",           c: 2, r: -1, k: "az" },
-          { id: "client", t: "Clientes MCP",     s: "Stellar e IDE do time",   c: 0, r: 0, k: "ext" },
+          { id: "client", t: "Clientes MCP",     s: "Stellar e IDEs dos devs", c: 0, r: 0, k: "ext" },
           { id: "apim",   t: "API Management",   s: "token, cota, rastreio",   c: 1, r: 0, k: "az" },
           { id: "mcp",    t: "ServiceNow MCP",   s: "semáforo e auditoria",    c: 2, r: 0, h: 3, k: "core",
             ports: [{ r: 0, t: "leitura" }, { r: 1, t: "escrita" }, { r: 2, t: "automações" }] },
@@ -470,7 +475,7 @@ window.DW = Object.assign(window.DW || {}, {
         nodes: [
           { id: "eh",     t: "Event Hubs",       s: "demanda, falha, prazo",    c: 0, r: 0, k: "az" },
           { id: "ctl",    t: "Controle",         s: "cria, pausa e cancela",    c: 1, r: 0, k: "core" },
-          { id: "team",   t: "Time DW",          s: "pausa e aprova",           c: 1, r: 1, k: "person" },
+          { id: "team",   t: "Quem opera",       s: "pausa e aprova",           c: 1, r: 1, k: "person" },
           { id: "pg",     t: "PostgreSQL",       s: "fila, passos e consumo",   c: 2, r: 0, k: "az" },
           { id: "dd",     t: "Observabilidade",  s: "modelo, consumo e erro",   c: 2, r: 1, k: "ext" },
           { id: "worker", t: "Worker do agente", s: "um por agente",            c: 3, r: 0, h: 4, k: "core agent",
@@ -514,8 +519,8 @@ window.DW = Object.assign(window.DW || {}, {
       items: ["SDK Python e template de automação", "Catálogo, execuções e idempotência", "Filas, repetição, dead-letter e callback", "Ação de Flow única no ServiceNow", "Primeiras 10 automações migradas"],
       gate: "10 automações em produção pelo Hub, com meta de sucesso definida e medida por automação", news: { hub: "catálogo, fila, execução" }, works: ["s-pedido"] },
     { n: "Fase 2", name: "MCP e Event Hub", when: "mar–mai 2027", goal: "O ServiceNow aberto por ferramentas de leitura e por eventos, já ligados ao Hub.",
-      items: ["MCP com a identidade do usuário e ferramentas de leitura", "Catálogo do Hub exposto como ferramentas", "Regra publicadora, ingestão e primeiros eventos", "Assinaturas que disparam automações", "Piloto dos agentes Intake e ROI, só com leitura"],
-      gate: "MCP de leitura e eventos em produção, com o Hub como primeiro assinante", news: { eh: "primeiros eventos", mcp: "ferramentas de leitura", ag: "piloto: Intake e ROI", ide: "leitura, pelas ferramentas", hub: "agenda e assinaturas" }, works: ["s-evento", "s-mcp", "a-intake", "a-roi"] },
+      items: ["MCP com a identidade do usuário e ferramentas de leitura", "Catálogo do Hub exposto como ferramentas", "Regra publicadora, ingestão e primeiros eventos", "Assinaturas que disparam automações", "Piloto dos agentes Intake e ROI, só com leitura", "Criação de agentes e integrações pela IDE, por operação autorizada"],
+      gate: "MCP de leitura e eventos em produção, com o Hub como primeiro assinante, e um agente criado pela IDE rodando em sombra", news: { eh: "primeiros eventos", mcp: "ferramentas de leitura", ag: "piloto: Intake e ROI", ide: "lê e cria agentes", hub: "agenda e assinaturas" }, works: ["s-evento", "s-mcp", "a-intake", "a-roi", "c-agente", "c-integracao"] },
     { n: "Fase 3", name: "Agentes de entrega", when: "jun–ago 2027", goal: "Agentes entregando proposta, pull request e testes, com escrita governada no ServiceNow.",
       items: ["Intake e ROI no fluxo real de demandas", "Agentes de Arquitetura, Pré-código e QA", "MCP de escrita com semáforo verde, amarelo e vermelho", "Automações com aprovação antes de executar"],
       gate: "5 agentes avaliados e usados no fluxo real de demandas", news: { ag: "agentes de entrega", mcp: "escrita com semáforo", hub: "com aprovação prévia", eh: "eventos de aprovação" }, works: ["s-demanda", "a-arch", "a-precode", "a-qa"] },

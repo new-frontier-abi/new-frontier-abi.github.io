@@ -173,7 +173,8 @@ window.TEAM = {
     { phase: "Fase 2 · MCP e Event Hub", when: "mar–mai 2027", steps: [
       ["MCP de leitura", "Dois usuários com permissões diferentes veem resultados diferentes", "dw-now-integration", 1],
       ["Eventos", "Um evento vira execução sem código novo; reenvio não duplica", "dw-now-integration", 1],
-      ["Piloto de agentes", "Intake e ROI medidos em demandas reais, só com leitura", "dw-agents", 1]
+      ["Piloto de agentes", "Intake e ROI medidos em demandas reais, só com leitura", "dw-agents", 1],
+      ["Agentes criados pela IDE", "Um agente criado pela IDE, por um dev de outra operação, roda em sombra", "dw-agents"]
     ] }
   ],
 
@@ -190,7 +191,8 @@ window.TEAM = {
     ["Identidade", [
       ["Registros de aplicativo: Hub, MCP e eventos", "agora"],
       ["ServiceNow como chamador do Hub", "agora"],
-      ["Token em nome do usuário até o ServiceNow", "agora"]
+      ["Token em nome do usuário até o ServiceNow", "agora"],
+      ["Grupos por operação, de quem pode criar agentes", "Fase 2"]
     ]],
     ["Gateway e rede", [
       ["Produto do Hub no gateway interno de APIs", "agora"],
@@ -250,11 +252,11 @@ window.TEAM = {
       ["net", "Fase 0", "Produtos no gateway interno de APIs, a rota até o cluster e o caminho do ServiceNow até o gateway.", "APIs no padrão da companhia, com cota e rastreio por consumidor."],
       ["stellar", "Fase 4", "Cliente MCP no chat, com o token de quem conversa, e a lista de casos de uso.", "ServiceNow e catálogo de automações como ferramentas, sem integração caso a caso."],
       ["llm", "Fase 0", "Acesso por ambiente, modelos aprovados e cota.", "Todo uso de modelo pelo gateway, com custo e limite por agente."],
-      ["zones", "Fase 0 em diante", "Lista priorizada de automações e um dono de negócio por automação.", "Catálogo, status e taxa de sucesso de cada automação."]
+      ["zones", "Fase 0 em diante", "Lista priorizada de automações e um dono de negócio por automação. Na Fase 2, quem pode criar agentes em cada operação.", "Catálogo, status e taxa de sucesso de cada automação. Na Fase 2, os devs autorizados criam os próprios agentes pela IDE."]
     ]
   },
 
-  /* ---------- 5 · Agentes ---------- */
+  /* ---------- agentes: a escada, as funções, os passos e os controles. Aparecem na página Agentes ---------- */
   ladder: [
     ["Código", "Regra fixa, com teste", "primeira escolha"],
     ["Chamada de modelo", "Um passo só: classificar, resumir, extrair", ""],

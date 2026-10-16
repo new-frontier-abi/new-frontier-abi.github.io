@@ -1,5 +1,6 @@
-/* Página do time de automações: 1 jornada (e o ambiente por dentro), 2 base, 3 recursos, 4 times, 5 agentes.
-   O conteúdo vem de assets/team-data.js; os fluxos dos agentes e o mapa deles, de assets/data.js; as peças das telas, de assets/ui.js. */
+/* Página do time de automações: 1 jornada (e o ambiente por dentro), 2 base, 3 recursos, 4 times.
+   Os agentes, com as funções e os passos de construção, ficam na página Agentes, a entrada do site.
+   O conteúdo vem de assets/team-data.js; as peças das telas, de assets/ui.js. */
 (function () {
   "use strict";
   var T = window.TEAM, D = window.DW, U = D.ui, esc = U.esc, view = U.view;
@@ -16,7 +17,8 @@
       "<div class='part' id='env'>" + U.sect("Técnico", "Por dentro: o ambiente de dev e as automações no Azure",
         "Um ambiente pequeno, descrito em código, para validar de ponta a ponta antes de crescer.") +
       U.seg([{ items: TECH.map(function (t) { return [t.id, t.label]; }) }], "Desenhos técnicos") +
-      "<div class='work'>" + U.stage("play", U.legend(T.envLegend)) + "<aside class='side'>" + U.steps() + "</aside></div></div>";
+      "<div class='work'>" + U.stage("play", U.legend(T.envLegend)) + "<aside class='side'>" + U.steps() + "</aside></div></div>" +
+      "<div class='below'><p class='aside'><b>Agentes.</b> O fluxo de cada agente, as " + T.functions.length + " funções mapeadas, como implementar um agente e como qualquer operação cria um pela IDE estão na página <a href='../'>Agentes</a>.</p></div>";
     function apply(k, map) {
       var S = J.steps[k];
       for (var n in map.nodes) {   /* o que ainda não chegou, ou já foi desligado, fica só no contorno */
@@ -83,29 +85,10 @@
     });
   }
 
-  /* ---------- 5 · Agentes: o fluxo de cada um, sobre o mapa da plataforma; embaixo, a regra, as funções e como construir ---------- */
-  var AGENTS = [{ name: "Jornada", ids: ["s-demanda"] }, { name: "Entrega", ids: ["a-intake", "a-roi", "a-arch", "a-precode", "a-qa"] },
-    { name: "Operação", ids: ["a-ops"] }, { name: "ServiceNow", ids: ["a-nowdev"] }];
-  function agentes(arg) {
-    var F = T.functions, agents = F.filter(function (f) { return f[5] === "agente"; }).length;
-    view.innerHTML = U.head("Sete agentes no trabalho do time. Em todos, uma pessoa decide.",
-        "Cada agente tem um fluxo, do que o aciona ao que uma pessoa decide, passando pelo ServiceNow, pelo Hub e pelo DevOps.") +
-      U.flows("fl", AGENTS, D.scenarios, "Agentes") +
-      "<div class='below'>" + U.sect(null, F.length + " funções mapeadas. Só " + agents + " pedem um agente.", "A regra é a menor arquitetura que resolve: código antes de modelo, modelo antes de agente.") +
-      "<div class='ladder'>" + T.ladder.map(function (l, i) { return "<div><small>" + (i + 1) + (l[2] ? " · " + esc(l[2]) : "") + "</small><b>" + esc(l[0]) + "</b><span>" + esc(l[1]) + "</span></div>"; }).join("") + "</div>" +
-      U.sect(null, "Todas as funções", "Toque em uma função para ver o antes, o depois e o que continua com pessoas. As marcadas como proposta ainda não estão no plano de fases.", "funcoes") +
-      "<div class='part' id='fn'>" + U.functions(F, T.groups) + "</div>" +
-      U.sect(null, "Como implementar um agente", "Oito passos, os mesmos para todos. Sem conjunto de avaliação, o agente não vai para uso real.") +
-      "<ol class='stepper'>" + T.build.map(function (b, i) { return "<li><small>" + U.pad(i + 1) + "</small><b>" + esc(b[0]) + "</b><span>" + esc(b[1]) + "</span></li>"; }).join("") + "</ol>" +
-      U.sect(null, "O que todo agente tem") + U.cols(T.controls) + "</div>";
-    U.Functions(document.getElementById("fn"), "agente");
-    U.Flows("fl", AGENTS, D.scenarios, { start: arg, primary: true, onPick: function (id) { U.hash("agentes", id); } });
-    if (arg === "funcoes") U.aim(document.getElementById("funcoes"));   /* #agentes/funcoes abre direto na lista das funções */
-  }
-
   U.shell({
     page: "automacoes", base: "../",
-    tabs: [["jornada", "Jornada"], ["base", "Base"], ["recursos", "Recursos"], ["times", "Times"], ["agentes", "Agentes"]],
-    views: { jornada: jornada, base: base, recursos: recursos, times: times, agentes: agentes }
+    tabs: [["jornada", "Jornada"], ["base", "Base"], ["recursos", "Recursos"], ["times", "Times"]],
+    views: { jornada: jornada, base: base, recursos: recursos, times: times },
+    moved: function (tab, arg) { return tab === "agentes" ? "../#dw" + (arg ? "/" + arg : "") : null; }   /* os agentes foram para a página de entrada */
   });
 })();

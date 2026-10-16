@@ -1,12 +1,14 @@
-/* Página do time do ServiceNow: 1 operação e 2 desenvolvimento (os fluxos do trabalho do time e, embaixo, cada fluxo no Azure), 3 exemplos, 4 agentes, 5 garantias.
-   O conteúdo vem de assets/now-data.js; o mapa e os fluxos dos agentes, de assets/data.js; as funções, de assets/team-data.js;
+/* Página do time do ServiceNow: 1 operação e 2 desenvolvimento (os fluxos do trabalho do time e, embaixo, cada fluxo no Azure), 3 exemplos,
+   4 agentes (os cinco que o time encontra na instância), 5 garantias. Todos os agentes, a criação pela IDE e a governança ficam na página Agentes.
+   O conteúdo vem de assets/now-data.js; o mapa e os fluxos da plataforma, de assets/data.js; as funções, de assets/team-data.js;
    as peças das telas, de assets/ui.js; as raias, de assets/seq.js. */
 (function () {
   "use strict";
   var N = window.NOW, T = window.TEAM, D = window.DW, U = D.ui, esc = U.esc, view = U.view;
   var FLOWS = D.scenarios.concat(N.flows);   /* os fluxos da plataforma e os do time, sobre o mesmo mapa */
-  var AGENTS = [{ name: "No ServiceNow", ids: ["a-nowdev"] }, { name: "Entrega de automações", ids: ["a-intake", "a-roi", "a-arch", "a-precode", "a-qa"] },
-    { name: "Operação", ids: ["a-ops"] }, { name: "Jornada", ids: ["s-demanda"] }];
+  /* os cinco que o time encontra na instância, na ordem da tabela de quem é cada um (N.named) */
+  var MEET = [{ name: null, ids: [["a-nowdev", "Now Dev"], ["f-qa", "QA"], ["f-prazo", "Operação"], ["s-triagem", "Classificação"], ["f-kb", "Rascunho de artigo"]] }];
+  var GONE = ["s-demanda", "a-intake", "a-roi", "a-arch", "a-precode", "a-qa", "a-ops"];   /* fluxos que esta aba mostrava e que agora estão na página Agentes */
   function down(el) { el.scrollIntoView({ behavior: window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block: "start" }); }
 
   /* o desenho em raias de um fluxo: o processo que o mostra por dentro, com o texto próprio do fluxo quando ele tem um */
@@ -93,27 +95,24 @@
     legend(board.current());
   }
 
-  /* ---------- 4 · Agentes: o fluxo inteiro de cada um; embaixo, quem o time encontra e o catálogo dos trabalhos ---------- */
+  /* ---------- 4 · Agentes: o fluxo de cada um dos cinco que o time encontra; embaixo, quem é cada um e o catálogo dos trabalhos ---------- */
   function agentes(arg) {
     var F = T.functions.filter(function (f) { return f[11]; });
     var agents = F.filter(function (f) { return f[5] === "agente"; }).length, plan = F.filter(function (f) { return !f[10]; }).length;
     var tema = arg === "funcoes" ? "" : arg && N.temas.some(function (t) { return t[0] === arg; }) ? arg : null;   /* um tema no endereço abre o catálogo já filtrado */
-    view.innerHTML = U.head("Sete agentes, do gatilho à decisão de uma pessoa",
-        "O fluxo inteiro de cada um: o que o aciona, o que ele lê no ServiceNow e no Hub, o que entrega no DevOps ou no ticket e quem decide.") +
-      U.flows("fl", AGENTS, D.scenarios, "Agentes") +
-      "<div class='below'>" + U.sect(null, "Quem o time vai encontrar na Fase 4", "Cada um entrega algo que uma pessoa revisa. Nenhum promove, publica, reatribui ou fecha sozinho.") +
+    view.innerHTML = U.head("Os cinco que o time vai encontrar na instância",
+        "Dois agentes, um pipeline híbrido, uma chamada de modelo e uma busca em fontes, todos na Fase 4. O fluxo de cada um, do gatilho à decisão do time.") +
+      U.flows("fl", MEET, FLOWS, "Quem o time encontra") +
+      "<div class='below'>" + U.sect(null, "Quem é cada um", "Cada um entrega algo que uma pessoa revisa. Nenhum promove, publica, reatribui ou fecha sozinho.") +
       U.table(["Quem", "O que é", "Entrega", "Limite"], N.named, ["nb", "nb", "", ""]) +
       U.sect(null, F.length + " trabalhos de hoje que a plataforma assume ou acelera. Só " + agents + " pedem um agente.",
         plan + " estão no plano de fases. Os outros " + (F.length - plan) + " são propostas, para o time escolher.", "catalogo") +
       "<details class='fold' id='cat'" + (tema != null ? " open" : "") + "><summary>Ver os " + F.length + " trabalhos, por tema</summary>" +
       "<div class='part' id='fn'>" + U.functions(F, N.temas, true, 11) + "</div>" +
       "<p class='aside'><b>Ferramenta nova.</b> " + esc(N.tools) + "</p></details>" +
-      U.sect(null, "A menor solução que resolve", "Código antes de modelo, modelo antes de agente. É por isso que a maior parte da lista não é agente.") +
-      "<div class='ladder'>" + T.ladder.map(function (l, i) { return "<div><small>" + (i + 1) + (l[2] ? " · " + esc(l[2]) : "") + "</small><b>" + esc(l[0]) + "</b><span>" + esc(l[1]) + "</span></div>"; }).join("") + "</div>" +
-      U.sect(null, "O que todo agente tem") + U.cols(T.controls) +
-      "<p class='aside'><b>Por dentro.</b> O desenho técnico de uma execução de agente no Azure está na página da <a href='../#plataforma/ag'>plataforma</a>.</p></div>";
+      "<p class='aside'><b>Todos os agentes.</b> Os sete agentes do DW, como qualquer operação cria um agente pela IDE, a governança, a menor solução que resolve e o desenho técnico de uma execução estão na página <a href='../'>Agentes</a>.</p></div>";
     U.Functions(document.getElementById("fn"), tema || "");
-    U.Flows("fl", AGENTS, D.scenarios, { start: tema != null ? null : arg, primary: true, onPick: function (id) { U.hash("agentes", id); } });
+    U.Flows("fl", MEET, FLOWS, { start: tema != null ? null : arg, primary: true, onPick: function (id) { U.hash("agentes", id); } });
     if (tema != null) U.aim(document.getElementById("catalogo"));
   }
 
@@ -134,6 +133,7 @@
   U.shell({
     page: "servicenow", base: "../",
     tabs: [["operacao", "Operação"], ["desenvolvimento", "Desenvolvimento"], ["exemplos", "Exemplos"], ["agentes", "Agentes"], ["garantias", "Garantias"]],
-    views: { operacao: operacao, desenvolvimento: desenvolvimento, exemplos: exemplos, agentes: agentes, garantias: garantias }
+    views: { operacao: operacao, desenvolvimento: desenvolvimento, exemplos: exemplos, agentes: agentes, garantias: garantias },
+    moved: function (tab, arg) { return tab === "agentes" && GONE.indexOf(arg) >= 0 ? "../#dw/" + arg : null; }
   });
 })();
