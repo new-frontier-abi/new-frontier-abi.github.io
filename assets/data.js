@@ -46,7 +46,7 @@ window.DW = Object.assign(window.DW || {}, {
     { id: "hub", name: "Automation Hub", phase: "Fase 1", text: "Catálogo e runtime de automações em Python. Fila, repetição, log e monitoramento vêm da plataforma: a automação só contém a regra de negócio." },
     { id: "eh",  name: "Now Event Hub", phase: "Fase 2", text: "O ServiceNow publica eventos selecionados uma única vez. Cada time assina o que precisa, sem trigger novo." },
     { id: "mcp", name: "ServiceNow MCP", phase: "Fases 2 e 3", text: "O ServiceNow como ferramentas de negócio, com a identidade e as permissões de quem pede. Leitura primeiro; escrita governada depois." },
-    { id: "ag",  name: "Agentes", phase: "Fases 2 a 4", text: "Assumem o trabalho repetitivo de entrega e de operação, usando as outras três peças. A partir da Fase 2, qualquer operação autorizada cria os próprios agentes pela IDE. Pessoas decidem nos pontos de aprovação." }
+    { id: "ag",  name: "Agentes", phase: "Fases 2 a 4", text: "Assumem o trabalho repetitivo de entrega e de operação, usando as outras três peças. A partir da Fase 2, qualquer área autorizada da companhia cria os próprios agentes pela IDE. Pessoas decidem nos pontos de aprovação." }
   ],
   /* o que está em volta da plataforma no mapa executivo */
   outside: {
@@ -56,7 +56,7 @@ window.DW = Object.assign(window.DW || {}, {
     llm: "O gateway corporativo de modelos. Único caminho dos agentes para um modelo de linguagem.",
     target: "Onde a automação age: Entra ID, SAP e os demais sistemas com API.",
     client: "O chat interno, para todos os funcionários. Hoje atende mais temas de RH, e TI está entrando. Na Fase 4, passa a usar as ferramentas.",
-    ide: "A IDE de quem constrói, em qualquer operação autorizada: Claude Code, Codex ou outra com cliente MCP. Desde a Fase 2, lê a estrutura e cria agentes e integrações.",
+    ide: "A IDE de quem constrói, em qualquer área autorizada: Claude Code, Codex ou outra com cliente MCP. Desde a Fase 2, lê a estrutura e cria agentes e integrações.",
     ci: "Repositório, testes e deploy: a esteira de entrega. O pull request de um agente passa pelos mesmos gates de um pull request humano.",
     team: "As pessoas do Digital Workplace nos pontos de decisão: priorizar, revisar, aprovar e promover."
   },
@@ -85,13 +85,13 @@ window.DW = Object.assign(window.DW || {}, {
 
   /* para onde seguir, a partir da visão geral: [endereço, para quem, nome, o que tem] */
   site: [
-    ["../", "Para todas as operações", "Agentes", "A página de entrada: como qualquer operação cria agentes pela IDE, os agentes do DW, a governança e as decisões."],
+    ["../", "Para todas as áreas", "Agentes", "A página de entrada: como qualquer área da companhia cria agentes pela IDE, os agentes do DW, a governança e as decisões."],
     ["../automacoes/", "Para quem constrói", "Automações", "A jornada do time, a base passo a passo, os recursos e os times parceiros."],
     ["../servicenow/", "Para o time da instância", "ServiceNow", "Os fluxos de operação e de desenvolvimento, os exemplos, os agentes da instância e as garantias."]
   ],
   /* fluxos que estão na página Agentes, e não aqui: [aba, rótulo curto, título]. O critério de saída de cada fase leva até eles. */
   away: {
-    "c-agente": ["criar", "Agente pela IDE", "Um dev de qualquer operação cria um agente pela IDE"],
+    "c-agente": ["criar", "Agente pela IDE", "Um dev de qualquer área cria um agente pela IDE"],
     "c-integracao": ["criar", "Integração nova", "Falta uma ferramenta: a integração vira automação"]
   },
 
@@ -519,7 +519,7 @@ window.DW = Object.assign(window.DW || {}, {
       items: ["SDK Python e template de automação", "Catálogo, execuções e idempotência", "Filas, repetição, dead-letter e callback", "Ação de Flow única no ServiceNow", "Primeiras 10 automações migradas"],
       gate: "10 automações em produção pelo Hub, com meta de sucesso definida e medida por automação", news: { hub: "catálogo, fila, execução" }, works: ["s-pedido"] },
     { n: "Fase 2", name: "MCP e Event Hub", when: "mar–mai 2027", goal: "O ServiceNow aberto por ferramentas de leitura e por eventos, já ligados ao Hub.",
-      items: ["MCP com a identidade do usuário e ferramentas de leitura", "Catálogo do Hub exposto como ferramentas", "Regra publicadora, ingestão e primeiros eventos", "Assinaturas que disparam automações", "Piloto dos agentes Intake e ROI, só com leitura", "Criação de agentes e integrações pela IDE, por operação autorizada"],
+      items: ["MCP com a identidade do usuário e ferramentas de leitura", "Catálogo do Hub exposto como ferramentas", "Regra publicadora, ingestão e primeiros eventos", "Assinaturas que disparam automações", "Piloto dos agentes Intake e ROI, só com leitura", "Criação de agentes e integrações pela IDE, por área autorizada"],
       gate: "MCP de leitura e eventos em produção, com o Hub como primeiro assinante, e um agente criado pela IDE rodando em sombra", news: { eh: "primeiros eventos", mcp: "ferramentas de leitura", ag: "piloto: Intake e ROI", ide: "lê e cria agentes", hub: "agenda e assinaturas" }, works: ["s-evento", "s-mcp", "a-intake", "a-roi", "c-agente", "c-integracao"] },
     { n: "Fase 3", name: "Agentes de entrega", when: "jun–ago 2027", goal: "Agentes entregando proposta, pull request e testes, com escrita governada no ServiceNow.",
       items: ["Intake e ROI no fluxo real de demandas", "Agentes de Arquitetura, Pré-código e QA", "MCP de escrita com semáforo verde, amarelo e vermelho", "Automações com aprovação antes de executar"],

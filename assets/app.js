@@ -15,7 +15,7 @@
       U.seg([{ items: D.tech.map(function (t) { return [t.id, t.label]; }) }], "Desenhos técnicos") +
       "<div class='work'>" + U.stage("play", U.legend(D.techLegend)) + "<aside class='side'>" + U.steps() + "</aside></div></div>" +
       "<div class='below'>" + U.sect(null, "Regras do desenho") + U.cols(D.rules) +
-      U.sect(null, "Quatro páginas, uma plataforma", "O mesmo desenho, visto pelas operações que criam agentes, por quem constrói e por quem cuida do ServiceNow.") +
+      U.sect(null, "Quatro páginas, uma plataforma", "O mesmo desenho, visto pelas áreas que criam agentes, por quem constrói e por quem cuida do ServiceNow.") +
       "<div class='jumps'>" + D.site.map(function (j) {
         return "<a class='jump' href='" + j[0] + "'" + (j[0].charAt(0) === "#" ? " data-go='" + j[0].slice(1) + "'" : "") + "><small>" + esc(j[1]) + "</small><b>" + esc(j[2]) + "</b><span>" + esc(j[3]) + "</span></a>"; }).join("") + "</div></div>";
 
@@ -56,7 +56,7 @@
   function fases() {
     var P = D.phases;
     view.innerHTML = U.head("Cinco fases: primeiro a fundação, depois os agentes",
-        "A fundação são as Fases 0 a 2: base, Automation Hub, MCP e Event Hub. Na Fase 2, as operações também começam a criar agentes pela IDE.") +
+        "A fundação são as Fases 0 a 2: base, Automation Hub, MCP e Event Hub. Na Fase 2, as áreas da companhia também começam a criar agentes pela IDE.") +
       "<div class='part' id='ph'>" + U.timeline(P.map(function (p) { return { b: p.n, name: p.name, when: p.when }; })) +
       "<div class='work'>" + U.stage("play", U.legend([["new", "Entra nesta fase"], ["core", "Construído antes"], ["ext", "Já existe hoje"], ["ghost", "Ainda não existe"]])) +
       "<aside class='side'><div class='panel'><h2>O que entra</h2><div class='pbody' id='ph-items'></div></div>" +

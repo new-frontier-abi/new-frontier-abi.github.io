@@ -6,7 +6,7 @@ Publicado em <https://new-frontier-abi.github.io>.
 
 | Página | Para quem | O que mostra |
 |---|---|---|
-| [Agentes](https://new-frontier-abi.github.io/) (a entrada) | Liderança e todas as operações | Como qualquer operação cria agentes e integrações pela IDE, os agentes do DW com o fluxo de cada um, a governança em camadas e as decisões: o que construir, em que ordem e quem decide |
+| [Agentes](https://new-frontier-abi.github.io/) (a entrada) | Liderança e todas as áreas da companhia | Como qualquer área cria agentes e integrações pela IDE, os agentes do DW com o fluxo de cada um e dois painéis de uma página: a governança em camadas e a decisão (o que construir, em que ordem e quem decide). O Automation Hub e o ServiceNow são complementos |
 | [Plataforma](https://new-frontier-abi.github.io/plataforma/) | Liderança e arquitetura | As quatro peças, o desenho técnico de cada uma no Azure, os fluxos de autoatendimento e as fases |
 | [Automações](https://new-frontier-abi.github.io/automacoes/) | O time que constrói e opera | A jornada, o ambiente e a esteira, a base passo a passo, os recursos e os times |
 | [ServiceNow](https://new-frontier-abi.github.io/servicenow/) | O time do ServiceNow | Os fluxos de operação e de desenvolvimento, cada um com o desenho no Azure; os exemplos; os cinco que o time encontra na instância; as garantias |
@@ -18,7 +18,7 @@ Tudo o que acontece é contado como um fluxo: um caminho sobre o mapa da platafo
 | Caminho | Conteúdo |
 |---|---|
 | `index.html`, `plataforma/index.html`, `automacoes/index.html`, `servicenow/index.html` | As quatro páginas: só o cabeçalho, com o logo, e a lista de arquivos |
-| `assets/agents-data.js` | Agentes: a fábrica (por onde um agente novo passa), os fluxos de criar pela IDE, as camadas de governança com os casos, o caminho de uma demanda até a fila e os blocos da decisão |
+| `assets/agents-data.js` | Agentes: a fábrica (por onde um agente novo passa), os fluxos de criar pela IDE e o conteúdo dos dois painéis, governança (`gov`) e decisão (`plan`) |
 | `assets/data.js` | Plataforma: mapa executivo, desenhos técnicos, fluxos (os de autoatendimento e um por agente do DW) e fases |
 | `assets/team-data.js` | Time de automações: jornada, ambiente, base, recursos, times e funções, a escada da menor solução e os passos para implementar um agente |
 | `assets/now-data.js` | ServiceNow: os fluxos do time, os processos em raias, os exemplos, a instância por dentro e as garantias |
@@ -56,14 +56,14 @@ O conteúdo fica só nos quatro arquivos de dados. Não há build: sirva a pasta
 - **Mapa**: cada nó tem coluna (`c`) e linha (`r`) em uma grade; `h` é a altura em linhas. Uma ligação anda em linha reta entre nós da mesma linha ou coluna; `bend: "hv"` ou `"vh"` faz um L; `step` desce em degrau até a coluna ao lado.
 - **Fluxo**: cada passo tem `path`, a sequência de nós por onde o ponto anda. Só vale passar por ligações que existem. `sub` troca a segunda linha de um nó, no fluxo inteiro ou só em um passo. `phase` é a fase em que o fluxo passa a funcionar; `5` é proposta, e pede `note`. Opcional: `build: true` faz o mapa daquele fluxo se montar passo a passo, só com as peças que ele usa.
 - **Fluxo de agente**: um por agente do DW, em `assets/data.js`, do que o aciona ao que uma pessoa decide. Ficam na página Agentes; a do ServiceNow mostra os que o time encontra na instância.
-- **Página Agentes**: em `assets/agents-data.js`, três mapas próprios. A fábrica (`factory`) leva os fluxos de criar (`flows`); as camadas (`layers`), os casos de governança (`gov`), que acendem camadas com `on`; a fila (`queue`), o caminho de uma demanda (`queueFlow`). Cada fluxo diz em `map` sobre qual mapa anda.
+- **Página Agentes**: em `assets/agents-data.js`. A fábrica (`factory`) é um mapa próprio e leva os fluxos de criar (`flows`; cada fluxo diz em `map` sobre qual mapa anda). Governança (`gov`) e decisão (`plan`) são painéis de uma página só, no modelo de um one pager: tudo à vista, sem passos. Os números do ponto de partida saem do próprio site (o checker confere).
 - **Fluxo do time do ServiceNow**: em `assets/now-data.js`, sobre o mesmo mapa. `run` e `dev` dizem quais fluxos entram em cada tela e trazem a tabela do que muda para o time. `tech` liga cada fluxo ao processo em raias; `board`, ao exemplo.
 - **Desenho técnico**: igual a um fluxo, com o próprio mapa em `map`, que aparece inteiro. Um passo com `on` acende um conjunto de nós em vez de andar.
 - **Linha do tempo** (jornada e fases): `p` diz em que passo, ou fase, o nó e a ligação passam a existir; antes disso, o nó aparece só no contorno. Na jornada, `ghost` devolve ao contorno o que foi desligado.
 - **Processo em raias**: quem participa (`seq.parts`, tirado de `parts`) e as etapas. Cada etapa tem os trechos que percorre (`hops`: de, para e um rótulo curto). A camada de cada participante (`g`) decide se ele fica dentro da zona do Azure.
 - **Exemplo do ServiceNow**: um quadro de cartões (`cards`) e os passos que acendem cada cartão (`on`; o primeiro é o que fica à vista). `flow` diz qual fluxo conta a história dele.
 
-O endereço guarda a seção e o fluxo: `#dw/a-qa`, `#criar/c-agente`, `#governanca/gv-verde`, `plataforma/#plataforma/hub`, `servicenow/#operacao/f-prazo`, `servicenow/#exemplos/e-oferta`. `#dw/funcoes` abre direto na lista das funções, e `#decisao/quem`, na tabela de quem decide. O botão de voltar do navegador anda pelas seções.
+O endereço guarda a seção e o fluxo: `#dw/a-qa`, `#criar/c-agente`, `#governanca`, `plataforma/#plataforma/hub`, `servicenow/#operacao/f-prazo`, `servicenow/#exemplos/e-oferta`. `#dw/funcoes` abre direto na lista das funções, e `#decisao/quem`, na tabela de quem decide. O botão de voltar do navegador anda pelas seções.
 
 Os endereços de antes continuam valendo: `#plataforma`, `#autoatendimento` e `#fases`, na entrada, levam à página da plataforma; `#agentes`, em qualquer página, leva aos agentes do DW, na entrada (no ServiceNow, só os fluxos que saíram de lá).
 
